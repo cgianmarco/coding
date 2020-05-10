@@ -1,0 +1,35 @@
+<canvas id='canvas'></canvas>
+<script src="drawing.js"></script>
+<script src="agent.js"></script>
+<script src="code.js"></script>
+<script type="text/javascript">
+	window.onload = function(){	
+		
+
+		var i = 0
+
+		function update() {
+			[func, arg] = agent.commands.shift()
+			agent.run(func, arg)
+		}
+
+		function draw() {
+		  env.conf.forEach(drawBlock)
+		}
+
+		function loop() {
+
+		  update();
+		  draw();
+
+		  window.requestAnimationFrame(loop);
+		}
+
+		window.requestAnimationFrame(loop);
+
+
+	}
+	
+
+
+</script>
