@@ -2,9 +2,15 @@
 <script src="https://unpkg.com/mathjs@7.0.0/dist/math.min.js" type="text/javascript"></script>
 <script src="drawing.js"></script>
 <script src="agent.js"></script>
-<script src="code.js"></script>
+
 <script type="text/javascript">
+
+	var env = new Environment()
+	var agent = new Agent(env)
+
 	window.onload = function(){	
+
+		env.conf.forEach(v => env.drawBlock(v))
 		
 
 		function update() {
@@ -15,9 +21,9 @@
 		}
 
 		function draw() {
-			if(env.lastInserted != null){	
-				env.conf.slice(env.lastInserted, env.conf.length).forEach(drawBlock)
-			}
+			if(env.lastInserted != null)
+				env.drawBlock(env.conf[env.lastInserted])
+				// env.conf.forEach(v => env.drawBlock(v))
 		}
 
 		function loop() {
@@ -36,3 +42,4 @@
 
 
 </script>
+<script src="code.js"></script>
