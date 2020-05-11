@@ -24,6 +24,8 @@ function drawBlock(coords){
 
 	posx = width / 2 + (x - y) * tileWidth / 2;
 	posy = height/2 - 50 + (x + y) * tileHeight / 2;
+
+
 	points_top = [[posx, posy - z * tileHeight], 
 	  			  [posx + tileWidth/2, posy + tileHeight/2 - z * tileHeight],
 	  			  [posx, posy + tileHeight - z * tileHeight],
@@ -49,8 +51,11 @@ function rgb(r, g, b){
 }
 
 
+
+
 function drawPolygon(points, color){
-	context.strokeStyle = '#000000'
+	context.strokeStyle = rgb(198, 106, 93);
+	context.lineWidth = 0.2
 	context.beginPath()
 	context.moveTo(...points[0])
 	context.lineTo(...points[1])
@@ -60,5 +65,5 @@ function drawPolygon(points, color){
 
 	context.fillStyle = color;
 	context.fill();
-	// context.stroke()
+	context.stroke()
 }
