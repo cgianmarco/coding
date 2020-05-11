@@ -82,20 +82,16 @@ function howToSort(block1, block2){
 
 class Environment {
 	constructor(){
-		this.lastInserted = 0
 		this.pos = [8, 8, 1]
 		this.direction = [0, -1, 0]	
 
-		this.conf = []
+		this.conf = {}
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++)
-				this.conf.push([i, j, 0])
+				this.conf[[i, j, 0]] = true;
+		this.lastInserted = Object.keys(this.conf).sort(howToSort)
 
-		this.conf = this.conf.sort(howToSort)
-
-
-
-		
+		// this.conf = this.conf.sort(howToSort)
 	}
 
 	distance(coord){
@@ -103,7 +99,8 @@ class Environment {
 	}
 
 	isInConf(coord){
-		return binarySearch(this.conf, coord, this.distance)
+		return this.conf[coord]
+		// return binarySearch(this.conf, coord, this.distance)
 	}
 
 	getAbsoluteDirection(relative){
@@ -128,35 +125,30 @@ class Environment {
 	}
 
 	insert(newpos){
+		this.conf[newpos] = true;
+		this.lastInserted = newpos;
 
-		
-		if(this.conf.length == 0){
-			this.conf.push(newpos)
-			return 0
-		}else{
-			let i = 0;
+		return newpos;
+		// if(this.conf.length == 0){
+		// 	this.conf.push(newpos)
+		// 	return 0
+		// }else{
+		// 	let i = 0;
 			
-			while(this.distance(newpos) > this.distance(this.conf[i])){
+		// 	while(this.distance(newpos) > this.distance(this.conf[i])){
 				
-				if(i == this.conf.length - 1)
-					break
-				i = i + 1
-			}
-			if(arraysEqual(newpos, this.conf[i]))
-				return null
-			else{
-				this.conf = this.conf.slice(0, i).concat([newpos], this.conf.slice(i, this.conf.length))
-				return i - 1
-			}
+		// 		if(i == this.conf.length - 1)
+		// 			break
+		// 		i = i + 1
+		// 	}
+		// 	if(arraysEqual(newpos, this.conf[i]))
+		// 		return null
+		// 	else{
+		// 		this.conf = this.conf.slice(0, i).concat([newpos], this.conf.slice(i, this.conf.length))
+		// 		return i - 1
+		// 	}
 
-		}
-
-		
-
-
-
-				
-		
+		// }
 	}
 
 	move(relative){
@@ -176,9 +168,23 @@ class Environment {
 
 		let direction = this.getAbsoluteDirection(relative)
 		let newpos = math.add(this.pos, direction)
-		this.lastInserted = this.insert(newpos)
+		this.insert(newpos)
 		// this.conf = this.conf.sort(howToSort)
 
+	}
+
+	fetchChanges() {
+		if (this.lastInserted) {
+			console.log('blocks', Object.keys(this.conf))
+			let res = Object.keys(this.conf)
+				.sort(howToSort)
+				.filter(coords => howToSort(this.lastInserted, coords) <= 0)
+			console.log('changes', res)
+			this.lastInserted = null
+			return res
+		} else {
+			return []
+		}
 	}
 
 }
