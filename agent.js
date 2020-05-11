@@ -9,6 +9,16 @@ MOVE = 'move'
 TURN = 'turn'
 PLACE = 'place'
 
+LEFT_ROT = math.matrix([[0, 1, 0],
+					   [-1, 0, 0],
+			           [0, 0, 0]])
+
+RIGHT_ROT = math.matrix([[0, -1, 0],
+					    [1, 0, 0],
+			            [0, 0, 0]])
+
+
+
 function arraysEqual(a, b) {
   if (a === b) return true;
   if (a == null || b == null) return false;
@@ -54,8 +64,10 @@ function binarySearch(arr, x, map){
 
 
 
-	return recursiveFunction(arr, x, map, 0, arr.length)
+	return recursiveFunction(arr, x, map, 0, arr.length-1)
 }
+
+
 
 
  
@@ -65,115 +77,107 @@ function howToSort(block1, block2){
 			return block1[0] + block1[1] + block1[2] - block2[0] - block2[1] - block2[2]
 }
 
-function distance(block){
-	return block[0] + block[1] + block[2]
-}
+
 
 
 class Environment {
 	constructor(){
+		this.lastInserted = 0
+		this.pos = [8, 8, 1]
+		this.direction = [0, -1, 0]	
+
 		this.conf = []
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++)
 				this.conf.push([i, j, 0])
 
-		this.pos = [8, 8, 1]
-		this.direction = [0, -1]
-		// this.draw()
+		this.conf = this.conf.sort(howToSort)
+
+
+
+		
+	}
+
+	distance(coord){
+		return coord[0] + coord[1] + coord[2]
 	}
 
 	isInConf(coord){
-		// hashmap
-		// for(let i = 0; i < this.conf.length; i++){
-		// 	var current = this.conf[i]
-		// 	var same = true
-		// 	for(let j = 0; j < coord.length; j++)
-		// 		if(coord[j] != current[j])
-		// 			same = false
-		// 	if(same)
-		// 		return true			
-		// }
-		// return false
-		return binarySearch(this.conf, coord, distance)
+		return binarySearch(this.conf, coord, this.distance)
 	}
 
 	getAbsoluteDirection(relative){
-		let dir = [0,0,0]
 
-		if(relative == LEFT){
-			if(this.direction[0] != 0)
-				dir = [0, -this.direction[0], 0]
-			else
-				dir = [this.direction[1], 0, 0]
-		}
+		if(relative == LEFT)
+			return math.multiply(LEFT_ROT, this.direction).toArray()
 
-		if(relative == RIGHT){
-			if(this.direction[0] != 0)
-				dir = [0, this.direction[0], 0]
-			else
-				dir = [-this.direction[1], 0, 0]
-		}
+		if(relative == RIGHT)
+			return math.multiply(RIGHT_ROT, this.direction).toArray()
 
 		if(relative == FORWARD)
-			dir = [this.direction[0], this.direction[1], 0]
+			return this.direction
 
 		if(relative == BACK)
-			dir = [-this.direction[0], -this.direction[1], 0]
+			return -1 * this.direction
 
 		if(relative == UP)
-			dir = [0, 0, 1]
+			return [0, 0, 1]
 		if(relative == DOWN)
-			dir =  [0, 0, -1]
+			return [0, 0, -1]
 
-		return dir
 	}
 
-	move(relative){
-		let pos = this.pos
+	insert(newpos){
 
-		let direction = this.getAbsoluteDirection(relative)
+		
+		if(this.conf.length == 0){
+			this.conf.push(newpos)
+			return 0
+		}else{
+			let i = 0;
+			
+			while(this.distance(newpos) > this.distance(this.conf[i])){
+				
+				if(i == this.conf.length - 1)
+					break
+				i = i + 1
+			}
+			if(arraysEqual(newpos, this.conf[i]))
+				return null
+			else{
+				this.conf = this.conf.slice(0, i).concat([newpos], this.conf.slice(i, this.conf.length))
+				return i - 1
+			}
+
+		}
 
 		
 
-		let newpos = [pos[0] + direction[0],
-				  pos[1] + direction[1],
-				  pos[2] + direction[2]]
+
+
+				
+		
+	}
+
+	move(relative){
+		let direction = this.getAbsoluteDirection(relative)		
+		let newpos = math.add(this.pos, direction)
+
 		if(!this.isInConf(newpos))
 			this.pos = newpos
+
 	}
 
 	turn(relative){
-		let dir = [0, 0, 0]
-
-		if(relative == LEFT){
-			if(this.direction[0] != 0)
-				dir = [0, -this.direction[0]]
-			else
-				dir = [this.direction[1], 0]
-		}
-
-		if(relative == RIGHT){
-			if(this.direction[0] != 0)
-				dir = [0, this.direction[0]]
-			else
-				dir = [-this.direction[1], 0]
-		}
-
-		this.direction = dir
+		this.direction = this.getAbsoluteDirection(relative)
 	}
 
 	place(relative){
 
 		let direction = this.getAbsoluteDirection(relative)
-
-		let newpos = [this.pos[0] + direction[0],
-					this.pos[1] + direction[1],
-					this.pos[2] + direction[2]]
-					
-		if(!this.isInConf(newpos)){
-			this.conf.push(newpos)
-			this.conf = this.conf.sort(howToSort)
-		}
+		let newpos = math.add(this.pos, direction)
+		this.lastInserted = this.insert(newpos)
+		// this.conf = this.conf.sort(howToSort)
 
 	}
 
