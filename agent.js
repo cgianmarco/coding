@@ -38,33 +38,35 @@ function arraysEqual(a, b) {
 
 function binarySearch(arr, x, map){
 
-	var mapped = map(x)
+	return arr.findIndex(elem => arraysEqual(elem, x))
 
-	let recursiveFunction = function (arr, x, map, start, end) {
+	// var mapped = map(x)
 
+	// let recursiveFunction = function (arr, x, func, start, end) {
        
-	    // Base Condition 
-	    if (start > end) return -1; 
+	//     // Base Condition 
+	//     if (start > end) return -1; 
 	   
-	    // Find the middle index 
-	    let mid=Math.floor((start + end)/2); 
+	//     // Find the middle index 
+	//     let mid=Math.floor((start + end)/2); 
 	   
-	    // Compare mid with given key x 
-	    if (arraysEqual(arr[mid],x)) return mid; 
+	//     // Compare mid with given key x 
+	//     if (arraysEqual(arr[mid],x)) return mid; 
 	          
-	    // If element at mid is greater than x, 
-	    // search in the left half of mid 
-	    if(map(arr[mid]) > mapped)  
-	        return recursiveFunction(arr, x, map, start, mid-1); 
-	    else
-	        // If element at mid is smaller than x, 
-	        // search in the right half of mid 
-	        return recursiveFunction(arr, x, map, mid+1, end); 
-	}
+	//     // If element at mid is greater than x, 
+	//     // search in the left half of mid 
+	//     if(mid < arr.length)
+	// 	    if(func(arr[mid]) > mapped)  
+	// 	        return recursiveFunction(arr, x, func, start, mid-1); 
+	// 	    else
+	// 	        // If element at mid is smaller than x, 
+	// 	        // search in the right half of mid 
+	// 	        return recursiveFunction(arr, x, func, mid+1, end); 
+	// }
 
 
 
-	return recursiveFunction(arr, x, map, 0, arr.length-1)
+	// return recursiveFunction(arr, x, map, 0, arr.length)
 }
  
 
@@ -82,7 +84,7 @@ class Environment {
 
 	constructor(){
 		this.lastInserted = null
-		this.pos = [8, 8, 1]
+		this.pos = [8, 2, 1]
 		this.direction = [0, -1, 0]	
 
 		this.conf = []
@@ -169,7 +171,7 @@ class Environment {
 			return this.direction
 
 		if(relative == BACK)
-			return -1 * this.direction
+			return math.multiply(-1, this.direction)
 
 		if(relative == UP)
 			return [0, 0, 1]
@@ -253,6 +255,15 @@ class Environment {
 
 
 		for(let k = 0; k < 20; k++){
+
+			if(this.isInConf(math.add(coords, [1+k,1+k,1+k]))){
+				draw_top_left = false
+				draw_top_right = false
+				draw_left_top = false
+				draw_left_down = false
+				draw_right_top = false
+				draw_right_down = false
+			}
 			if(this.isInConf(math.add(this.blockOnTop(coords), [k,k,k]))){
 				draw_top_left = false
 				draw_top_right = false
@@ -277,6 +288,8 @@ class Environment {
 				draw_left_down = false
 			}
 		}
+
+		//console.log(coords)
 
 		if(draw_top_left)
 			drawPolygon(points_top_left, TOP)
