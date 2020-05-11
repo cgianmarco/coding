@@ -28,8 +28,6 @@ function arraysEqual(a, b) {
 
 function binarySearch(arr, x, map){
 
-	console.log(map)
-
 	var mapped = map(x)
 
 	let recursiveFunction = function (arr, x, map, start, end) {
