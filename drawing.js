@@ -1,11 +1,11 @@
 var canvas = document.getElementById('canvas'),
 			context = canvas.getContext('2d'),
-			width = canvas.width = window.innerWidth,
-			height = canvas.height = window.innerHeight;
+			width = canvas.width = canvas.offsetWidth,
+			height = canvas.height = canvas.offsetHeight
 
 
-var tileWidth = 20;
-var tileHeight = 10;
+var tileWidth = 26;
+var tileHeight = tileWidth / 2;
 
 const LEFT_COLOR = rgb(135, 57, 81);
 const RIGHT_COLOR = rgb(198, 106, 93);

@@ -341,4 +341,3 @@ class Agent {
     		this.env.place(direction)
     }
 }
-
