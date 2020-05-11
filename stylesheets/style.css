@@ -1,0 +1,8 @@
+.side-editor {
+    height: auto;
+}
+.CodeMirror {
+    line-height: 1.2em;
+    height: auto;
+    max-height: 50em;
+}
