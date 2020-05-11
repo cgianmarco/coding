@@ -1,30 +1,33 @@
+for(let p = 0; p < 3; p++){
 
-// agent.move(FORWARD)
-// agent.place(DOWN)
-// // agent.move(BACK)
-// // agent.place(DOWN)
-// // agent.move(UP)
-// // agent.place(DOWN)
+	for(let j = 0; j < 4; j++){
+		agent.move(UP)
+		for(let k = 0; k < 6; k++){
 
-// for(let p = 0; p < 3; p++){
+			agent.place(DOWN)
+			agent.move(FORWARD)
 
-// 	agent.move(UP)
-// 	agent.place(DOWN)
-
-// 	for(let j = 0; j < 2; j++){
-// 		for(let k = 0; k < 20; k++){
-
-// 			agent.place(DOWN)
-// 			agent.move(FORWARD)
 			
-// 		}
-// 		agent.turn(LEFT)
-// 	}
-// }
+		}
+		agent.turn(LEFT)
 
-// // agent.move(UP)
-// // agent.place(DOWN)
-// // agent.move(FORWARD)
-// // agent.place(DOWN)
-// // agent.move(LEFT)
-// // agent.place(DOWN)
+	}
+}
+
+
+for(let p = 0; p < 3; p++){
+
+	for(let j = 0; j < 4; j++){
+		agent.move(UP)
+		for(let k = 0; k < 6; k++){
+
+			agent.place(DOWN)
+			agent.move(BACK)
+
+			
+		}
+		agent.turn(RIGHT)
+
+	}
+}
+
