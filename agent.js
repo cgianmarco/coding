@@ -351,8 +351,9 @@ constructor(env) {
     this.commands = []
     this.env = env
 }
-move(direction) {
-   this.commands.push([MOVE, direction])
+move(direction, steps=1) {
+	for(let i = 0; i < steps; i++)
+   		this.commands.push([MOVE, direction])
 }
 turn(direction) {
     this.commands.push([TURN, direction])
