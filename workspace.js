@@ -5,8 +5,53 @@ import htm from 'https://unpkg.com/htm?module';
 const html = htm.bind(h);
 
 class CodeEditor extends Component {
-
     editor = createRef();
+    componentDidMount() {
+        this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
+            lineNumbers: true,
+            mode:  "javascript"
+        });
+        this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
+    }
+    render(props) {
+        return html`
+            <div class="side-editor">
+                <textarea ref=${this.editor} rows="40">${props.code}</textarea>
+            </div>
+        `
+    }
+}
+function EditorActions(props) {
+    let buttons = [
+        {
+            class: 'btn-warning ' + (props.running ? '' : 'disabled'),
+            click: props.onPause,
+            icon: 'pause'
+        },
+        {
+            class: 'btn-info ' + (props.running ? 'disabled' : ''),
+            click: props.onStepFW,
+            icon: 'step-forward'
+        },
+        {
+            class: 'btn-info ' + (props.running ? 'disabled' : ''),
+            click: props.onRun,
+            icon: 'play',
+            text: 'Run'
+        }
+    ]
+    .map((b, i) => html`<button class="btn shadow mr-2 btn ${i > 0 ? 'ml-2' : ''} ${b.class}" onClick=${b.click}><i class="fas fa-${b.icon}"></i> ${b.text}</button>`)
+    return html`
+        <div class="container-fluid">
+            <div class="row border-top">
+                <div class="col pt-3 text-right">
+                    ${buttons}
+                </div>
+            </div>
+        </div>
+    `
+}
+class App extends Component {
     state = { 
         running: false,
         code: ` //Initial script
@@ -26,34 +71,24 @@ for(let p = 0; p < 3; p++){
     }
 }
         
-        
-        for(let p = 0; p < 3; p++){
-        
-            for(let j = 0; j < 4; j++){
-                agent.move(UP)
-                for(let k = 0; k < 6; k++){
-        
-                    agent.place(DOWN)
-                    agent.move(BACK)
-        
-                    
-                }
-                agent.turn(RIGHT)
-        
-            }
-        }
-        
-        
-    ` };
+for(let p = 0; p < 3; p++){
 
-    componentDidMount() {
-        this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
-            lineNumbers: true,
-            mode:  "javascript"
-        });
+    for(let j = 0; j < 4; j++){
+        agent.move(UP)
+        for(let k = 0; k < 6; k++){
+
+            agent.place(DOWN)
+            agent.move(BACK)
+
+            
+        }
+        agent.turn(RIGHT)
+
     }
+}
+` };
     pause() {
-        this.setState({running: false, code: this.state.code})
+        this.setState({running: false})
     }
     stepFW() {
         this.frame();
@@ -62,8 +97,8 @@ for(let p = 0; p < 3; p++){
         if (this.state.running) {
             return;
         }
-        eval(this.codeMirror.getValue())
-        this.setState({running: true, code: this.state.code})
+        eval(this.state.code)
+        this.setState({running: true})
 		window.requestAnimationFrame(this.loop.bind(this))
     }
     loop() {
@@ -89,47 +124,18 @@ for(let p = 0; p < 3; p++){
         }
         if (update()) {
             draw()
+        } else {
+            this.setState({running: false})
         }
     }
-    render() {
-        let buttons = [
-            {
-                class: 'btn-warning ' + (this.state.running ? '' : 'disabled'),
-                click: this.pause.bind(this),
-                icon: 'pause'
-            },
-            {
-                class: 'btn-info ' + (this.state.running ? 'disabled' : ''),
-                click: this.stepFW.bind(this),
-                icon: 'step-forward'
-            },
-            {
-                class: 'btn-info ' + (this.state.running ? 'disabled' : ''),
-                click: this.runCode.bind(this),
-                icon: 'play',
-                text: 'Run'
-            }
-        ]
-        .map((b, i) => html`<button class="btn shadow mr-2 btn ${i > 0 ? 'ml-2' : ''} ${b.class}" onClick=${b.click}><i class="fas fa-${b.icon}"></i> ${b.text}</button>`)
-
-        return html`
-            <div class="side-editor">
-                <textarea ref=${this.editor} rows="40">${this.state.code}</textarea>
-            </div>
-            <div class="container-fluid">
-                <div class="row border-top">
-                    <div class="col pt-3 text-right">
-                        ${buttons}
-                    </div>
-                </div>
-            </div>
-        `
+    codeUpdated(code) {
+        this.setState({running: this.state.running, code: code})
     }
-}
-class App extends Component {
     render() {
       return html`
-        <${CodeEditor} />
+        <${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>
+        <${EditorActions} onPause=${this.pause.bind(this)} onStepFW=${this.stepFW.bind(this)}
+                          onRun=${this.runCode.bind(this)} />
       `;
     }
 }
