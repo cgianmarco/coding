@@ -198,11 +198,9 @@ class Environment {
 	}
 
 	place(relative){
-
 		let direction = this.getAbsoluteDirection(relative)
 		let newpos = math.add(this.pos, direction)
 		this.insert(newpos)
-
 	}
 
 	destroy(relative){

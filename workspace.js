@@ -9,10 +9,7 @@ import Accordion from './components/Accordion.js'
 const html = htm.bind(h);
 
 class App extends Component {
-    static makeEvalContext (declarations) {
-        eval(declarations);
-        return function (str) { eval(str); }
-    }
+
     constructor(props) {
         super(props)
         let env = new Environment();
@@ -88,6 +85,7 @@ for(let p = 0; p < 3; p++){
     }
     frame() {
         window.requestAnimationFrame(() => {
+            console.log('animation')
             if (this.state.agent.processNextCommand()) {
                 this.updateState({})
             } else {
@@ -115,7 +113,7 @@ for(let p = 0; p < 3; p++){
                 body: html`<${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>`,
                 options: {
                     body: {
-                        class: 'pl-0 pt-0 pr-0'
+                        class: 'pl-0 pt-0 pr-0 editor'
                     }
                 }
             },
