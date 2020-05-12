@@ -4,7 +4,7 @@ var canvas = document.getElementById('canvas'),
 			height = canvas.height = canvas.offsetHeight
 
 
-var tileWidth = 26;
+var tileWidth = 22;
 var tileHeight = tileWidth / 2;
 
 const LEFT_COLOR = rgb(135, 57, 81);

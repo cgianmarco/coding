@@ -266,7 +266,7 @@ class Environment {
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
-		let posy = height/2 - 50 + (x + y) * tileHeight / 2;
+		let posy = height/2 + 50 + (x + y) * tileHeight / 2;
 
 
 		let points_top = [[posx, posy - z * tileHeight], 
