@@ -4,13 +4,20 @@ import Icon from './Icon.js'
 // Initialize htm with Preact
 const html = htm.bind(h);
 
-function tooltip(elem, text) {
-    // tippy(elem, {
-    //     content: text
-    // })
+function tooltip(elem) {
+    tippy(elem, {
+        content: elem.title
+    })
 }
 class CodeEditor extends Component {
     editor = createRef();
+    buttons = []
+    constructor(props) {
+        super(props)
+        this.buttons[0] = createRef();
+        this.buttons[1] = createRef();
+        this.buttons[2] = createRef();
+    }
     componentDidMount() {
         this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
             lineNumbers: true,
@@ -23,6 +30,7 @@ class CodeEditor extends Component {
             // lintFix: { getFixes: getFixes }
         });
         this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
+        this.buttons.map(b => b.current).forEach(tooltip)
     }
     render(props) {
         let codeMirror = this.codeMirror;
@@ -35,7 +43,7 @@ class CodeEditor extends Component {
             {
                 title: "Redo",
                 icon: 'redo',
-                fn: e => codeMirror.undo()
+                fn: e => codeMirror.redo()
             },
             {
                 title: "Format",
@@ -62,7 +70,7 @@ class CodeEditor extends Component {
             }
         ]
         .map((action, idx) => html`
-            <button ref=${elem => tooltip(elem, action.title)} class="btn btn-light ${idx > 0 ? 'border-left' : ''}" onClick=${action.fn}>
+            <button ref=${this.buttons[idx]} title="${action.title}" class="btn btn-light ${idx > 0 ? 'border-left' : ''}" onClick=${action.fn}>
                 <${Icon} icon=${action.icon} />
             </button>
         `)
