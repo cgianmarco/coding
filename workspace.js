@@ -8,38 +8,6 @@ import Accordion from './components/Accordion.js'
 // Initialize htm with Preact
 const html = htm.bind(h);
 
-/*
-class CodeEditor extends Component {
-    editor = createRef();
-    componentDidMount() {
-        this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
-            lineNumbers: true,
-            mode:  "javascript"
-        });
-        this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
-    }
-    render(props) {
-        return html`
-            <div class="side-editor">
-                <textarea ref=${this.editor} rows="40">${props.code}</textarea>
-            </div>
-        `
-    }
-}
-*/
-
-function CommandsQueue(props) {
-    return html`
-        <div class="row">
-            <div class="col pt-3">
-                <div class="alert alert-info">
-                    <${Icon} icon="stream" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
-                </div>
-            </div>
-        </div>
-    `
-}
-
 class App extends Component {
     state = { 
         running: false,
@@ -122,7 +90,6 @@ for(let p = 0; p < 3; p++){
         this.setState({running: this.state.running, code: code})
     }
     render() {
-        let queue = this.state.queue ? html`<${CommandsQueue} queue=${this.state.queue} />` : null
         let sections = [
             {
                 icon: "code",
@@ -130,7 +97,7 @@ for(let p = 0; p < 3; p++){
                 body: html`<${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>`,
                 options: {
                     body: {
-                        class: 'pl-0 pt-1 pr-0'
+                        class: 'pl-0 pt-0 pr-0'
                     }
                 }
             },
@@ -139,9 +106,8 @@ for(let p = 0; p < 3; p++){
                 title: "Execution",
                 body: html`
                     <div class="container-fluid">
-                        <${EditorActions} running=${this.state.running} onPause=${this.pause.bind(this)} 
+                        <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
                                           onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)} />
-                        ${queue}
                     </div>
                 `
             }

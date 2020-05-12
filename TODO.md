@@ -3,8 +3,11 @@
 - Move multiplo
 - Comando distruggi
 - Robottino
-- Undo/redo (codice)
-- linter
 - terrain generation
 - colori
+- Documentazione API dell'editor (agent, etc...)
 
+
+DONE:
+- linter
+- Undo/redo (codice)

@@ -5,7 +5,6 @@ import Icon from './Icon.js'
 // Initialize htm with Preact
 const html = htm.bind(h);
 
-
 class Accordion extends Component {
     constructor(props) {
         super(props)
@@ -24,9 +23,14 @@ class Accordion extends Component {
                 return html`
                     <div class="card">
                         <div class="card-header">
-                            <button class="btn btn-link btn-sm" type="button" onClick=${this.toggle.bind(this, idx)} ><${Icon} icon="${section.icon}" /> ${section.title}</button>
+                            <button class="btn btn-outline-primary btn-sm" type="button" onClick=${this.toggle.bind(this, idx)}>
+                                <${Icon} icon="chevron-${this.state[idx] ? 'down' : 'right'}" />
+                            </button>
+                            <button class="btn btn-link btn-sm" type="button" onClick=${this.toggle.bind(this, idx)} >
+                                <${Icon} icon="${section.icon}" /> ${section.title}
+                            </button>
                         </div>
-                        <div class="collapse ${this.state[idx] ? 'show' : 'hide'}">
+                        <div class="border-top collapse ${this.state[idx] ? 'show' : 'hide'}">
                             <div class="card-body ${read(['options', 'body', 'class'], section)}">
                                 ${section.body}
                             </div>
