@@ -165,7 +165,7 @@ for(let p = 0; p < 3; p++){
         }
     }
     codeUpdated(code) {
-        this.setState({running: this.state.running, code: this.state.code})
+        this.setState({running: this.state.running, code: code})
     }
     render() {
         let queue = this.state.queue ? html`<${CommandsQueue} queue=${this.state.queue} />` : null
