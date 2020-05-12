@@ -23,17 +23,20 @@ function EditorActions(props) {
         {
             class: 'btn-danger ' + (props.process.running ? 'disabled' : ''),
             click: props.onReset,
-            icon: 'broom'
+            icon: 'broom',
+            text: 'Clean'
         },
         {
             class: 'btn-warning ' + (props.process.running ? '' : 'disabled'),
             click: props.onPause,
-            icon: 'pause'
+            icon: 'pause',
+            text: 'Pause'
         },
         {
             class: 'btn-info ' + (props.process.running ? 'disabled' : ''),
             click: props.onStepFW,
-            icon: 'step-forward'
+            icon: 'step-forward',
+            text: 'Step'
         },
         {
             class: 'btn-info ' + (props.process.running ? 'disabled' : ''),
@@ -43,17 +46,13 @@ function EditorActions(props) {
         }
     ]
     .map((b, i) => html`
-        <button class="btn mr-1 btn ${b.class}" onClick=${b.click}>
-            <${Icon} icon=${b.icon} /> ${b.text}
+        <button class="btn col mr-1 btn ${b.class}" onClick=${b.click}>
+<div><${Icon} icon=${b.icon} /></div><div>${b.text}</div>
         </button>
     `)
     return html`
         <div class="row">
-            <div class="col pt-3 text-right">
-                <div class="btn-group" role=button>
-                    ${buttons}
-                </div>
-            </div>
+            ${buttons}
         </div>
         <div class="row">
             <div class="col">

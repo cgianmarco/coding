@@ -1,4 +1,3 @@
-- Reset
 - Carica/salva
 - Comando distruggi
 - Robottino
@@ -11,4 +10,5 @@ DONE:
 - linter
 - Undo/redo (codice)
 - Move multiplo
+- Reset
 

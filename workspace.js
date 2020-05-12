@@ -54,48 +54,54 @@ for(let p = 0; p < 3; p++){
 }
 ` 
         };
-        this.state.env.drawChanges();
+        this.frame();
     }
     pause() {
         this.setState({running: false})
     }
     stepFW() {
+        this.executeCode()
         this.frame();
     }
     reset() {
-        let env = new Environment();
-        let agent = new Agent(env);
+        let env = new Environment()
+        let agent = new Agent(env)
         this.updateState({env, agent})
-        env.drawChanges();
+        this.frame()
     }
     runCode() {
         if (this.state.running) {
             return;
         }
-        let ctx = {};
-        (new Function(`"use strict"; this.script = function(agent) { ${this.state.code}\n }`))
-            .apply(ctx) //🤯
-        ctx.script.apply(null, [this.state.agent])
-
-
+        this.executeCode()
         this.updateState({running: true})
-		window.requestAnimationFrame(this.loop.bind(this))
+        window.requestAnimationFrame(this.play.bind(this));
     }
-    loop() {
+    play() {
         if (this.state.running) {
             this.frame();
-            window.requestAnimationFrame(this.loop.bind(this));
-        }
+            window.requestAnimationFrame(this.play.bind(this));
+        } 
     }
     updateState(update) {
         this.setState(state => Object.assign(state, update))
     }
     frame() {
-        if (this.state.agent.processNextCommand()) {
+        window.requestAnimationFrame(() => {
+            if (this.state.agent.processNextCommand()) {
+                this.updateState({})
+            } else {
+                this.updateState({running: false})
+            }
             this.state.env.drawChanges();
-            this.updateState({})
-        } else {
-            this.updateState({running: false})
+        })
+    }
+    executeCode() {
+        if (this.state.agent.commands.length == 0) {
+            let ctx = {};
+            new Function(`"use strict"; this.script = function(agent) { ${this.state.code}\n }`)
+                .apply(ctx) //🤯
+            ctx.script.apply(null, [this.state.agent])
         }
     }
     codeUpdated(code) {
