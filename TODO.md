@@ -1,6 +1,5 @@
 - Reset
 - Carica/salva
-- Move multiplo
 - Comando distruggi
 - Robottino
 - terrain generation
@@ -11,3 +10,5 @@
 DONE:
 - linter
 - Undo/redo (codice)
+- Move multiplo
+

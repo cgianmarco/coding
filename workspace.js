@@ -62,6 +62,12 @@ for(let p = 0; p < 3; p++){
     stepFW() {
         this.frame();
     }
+    reset() {
+        let env = new Environment();
+        let agent = new Agent(env);
+        this.updateState({env, agent})
+        env.drawChanges();
+    }
     runCode() {
         if (this.state.running) {
             return;
@@ -113,7 +119,8 @@ for(let p = 0; p < 3; p++){
                 body: html`
                     <div class="container-fluid">
                         <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
-                                          onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)} />
+                                          onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)}
+                                          onReset=${this.reset.bind(this)} />
                     </div>
                 `
             }

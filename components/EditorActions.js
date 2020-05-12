@@ -21,6 +21,11 @@ function EditorActions(props) {
 
     let buttons = [
         {
+            class: 'btn-danger ' + (props.process.running ? 'disabled' : ''),
+            click: props.onReset,
+            icon: 'broom'
+        },
+        {
             class: 'btn-warning ' + (props.process.running ? '' : 'disabled'),
             click: props.onPause,
             icon: 'pause'

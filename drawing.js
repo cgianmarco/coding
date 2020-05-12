@@ -19,7 +19,11 @@ function rgb(r, g, b){
 }
 
 
-
+class Drawing {
+	static clean() {
+		context.clearRect(0, 0, canvas.width, canvas.height);
+	}
+}
 
 function drawPolygon(points, color){
 	context.strokeStyle = rgb(0, 0, 0);

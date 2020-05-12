@@ -95,7 +95,7 @@ class Environment {
 				this.conf[[i, j, 0]] = {}
 				this.lastInserted.push([i, j, 0])
 			}
-
+		Drawing.clean()
 		//this.conf = this.conf.sort(howToSort)	
 	}
 
@@ -404,7 +404,8 @@ class Environment {
 class Agent {
 constructor(env) {
     this.commands = []
-    this.env = env
+	this.env = env
+	this.position = [15, 15, 1]
 }
 move(direction, steps=1) {
 	for(let i = 0; i < steps; i++)
