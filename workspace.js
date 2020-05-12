@@ -153,7 +153,7 @@ for(let p = 0; p < 3; p++){
         }
 
         function draw() {
-                env.lastInserted.forEach(e => env.drawBlock(env.conf[e]))
+                env.lastInserted.forEach(e => env.drawBlock(e))
                 env.lastInserted = []
         }
         if (update()) {

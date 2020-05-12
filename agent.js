@@ -130,7 +130,7 @@ class Environment {
 		if(!this.isInConf(newpos)){
 			this.conf.push(newpos)
 			this.conf.sort(howToSort)
-			this.lastInserted.push(binarySearch(this.conf, newpos, distance))
+			this.lastInserted.push(this.conf[binarySearch(this.conf, newpos, distance)])
 		}
 
 		
@@ -202,10 +202,55 @@ class Environment {
 	}
 
 	destroy(relative){
-		// let direction = this.getAbsoluteDirection(relative)
-		// let newpos = math.add(this.pos, direction)
-		// this.insert(newpos)
-		return
+		let direction = this.getAbsoluteDirection(relative)
+		let newpos = math.add(this.pos, direction)
+		this.conf = this.conf.filter(e => !arraysEqual(e, newpos))
+
+		let blockConfig = {
+			blockOnTop : {
+				shift : [0,0,1]
+			},
+
+			blockOnTopLeft : {
+				shift : [0,1,1],
+			},
+
+			blockOnTopRight : {
+				shift : [1,0,1],
+			},
+
+			blockOnLeft : {
+				shift : [0,1,0],
+			},
+
+			blockOnRight : {
+				shift : [1,0,0],
+			},
+
+			blockInFrontDown : {
+				shift : [1,1,0],
+			},
+
+			blockInFrontUp : {
+				shift : [1,1,1],
+			}
+		}
+
+		Object.values(blockConfig).forEach(e => {
+			let firstPoint = this.firstPointOnDiagonal(math.add(newpos, math.multiply(-1, e.shift)), -1)
+			if(firstPoint)
+				this.lastInserted.push(firstPoint)
+		})
+	}
+
+	// direction 1 for forward diagonal, -1 for back diagonal
+	firstPointOnDiagonal(start, direction){
+		for(let k = 0; k < 20; k++){
+			let point = math.add(start, math.multiply(direction, [k,k,k]))
+			if(this.isInConf(point))
+				return point
+		}
+		return null
 	}
 
 
@@ -284,56 +329,51 @@ class Environment {
 		let blockConfig ={
 			blockOnTop : {
 				found : false,
-				direction : [0,0,1],
+				shift : [0,0,1],
 				toRemove : ['top_left', 'top_right']
 			},
 
 			blockOnTopLeft : {
 				found : false,
-				direction : [0,1,1],
+				shift : [0,1,1],
 				toRemove : ['top_left']
 			},
 
 			blockOnTopRight : {
 				found : false,
-				direction : [1,0,1],
+				shift : [1,0,1],
 				toRemove : ['top_right']
 			},
 
 			blockOnLeft : {
 				found : false,
-				direction : [0,1,0],
+				shift : [0,1,0],
 				toRemove : ['left_top', 'left_down']
 			},
 
 			blockOnRight : {
 				found : false,
-				direction : [1,0,0],
+				shift : [1,0,0],
 				toRemove : ['right_top', 'right_down']
 			},
 
 			blockInFrontDown : {
 				found : false,
-				direction : [1,1,0],
+				shift : [1,1,0],
 				toRemove : ['left_down', 'right_down']
 			},
 
 			blockInFrontUp : {
 				found : false,
-				direction : [1,1,1],
+				shift : [1,1,1],
 				toRemove : ['top_left', 'top_right', 'left_top', 'left_down', 'right_top', 'right_down']
 			}
 		}
 
-
-		for(let k = 0; k < 20; k++){
-			Object.values(blockConfig).filter(e =>!e.found).forEach(e => {
-				
-				let point = math.add(math.add(e.direction, coords), [k,k,k])
-				if(this.isInConf(point))
-					e.found = true
-				})
-		}
+		Object.values(blockConfig).filter(e =>!e.found).forEach(e => {
+			if(this.firstPointOnDiagonal(math.add(e.shift, coords), 1))
+				e.found = true
+		})
 
 		Object.values(blockConfig).filter(e => e.found).forEach( e => {
 			e.toRemove.forEach(pos => {
