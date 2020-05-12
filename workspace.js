@@ -45,25 +45,43 @@ function EditorActions(props) {
     ]
     .map((b, i) => html`<button class="btn shadow mr-2 btn ${i > 0 ? 'ml-2' : ''} ${b.class}" onClick=${b.click}><i class="fas fa-${b.icon}"></i> ${b.text}</button>`)
     return html`
-        <div class="container-fluid">
-            <div class="row border-top">
-                <div class="col pt-3 text-right">
-                    ${buttons}
-                </div>
+        <div class="row">
+            <div class="col pt-3 text-right">
+                ${buttons}
             </div>
         </div>
     `
 }
 function CommandsQueue(props) {
     return html`
-        <div class="container-fluid">
-            <div class="row border-top">
-                <div class="col pt-3">
-                    <div class="alert alert-info">
-                        <${Icon} icon="stream" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
-                    </div>
+        <div class="row">
+            <div class="col pt-3">
+                <div class="alert alert-info">
+                    <${Icon} icon="stream" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
                 </div>
             </div>
+        </div>
+    `
+}
+function Accordion(props) {
+    let read = (prop, v) => prop.reduce((agg, p) => agg && agg[p], v)
+    var sections = props.sections
+        .map((section, idx) => {
+            return html`
+                <div class="card">
+                    <div class="card-header">
+                        <button class="btn btn-link btn-sm" type="button" ><${Icon} icon="${section.icon}" /> ${section.title}</button>
+                    </div>
+                    <div class="collapse ${idx == 0 ? 'show' : 'show'}">
+                        <div class="card-body ${read(['options', 'body', 'class'], section)}">
+                            ${section.body}
+                        </div>
+                    </div>
+                </div>
+            `})
+    return html`
+        <div class="accordion">
+            ${sections}
         </div>
     `
 }
@@ -151,11 +169,31 @@ for(let p = 0; p < 3; p++){
     }
     render() {
         let queue = this.state.queue ? html`<${CommandsQueue} queue=${this.state.queue} />` : null
+        let sections = [
+            {
+                icon: "code",
+                title: 'Code Editor',
+                body: html`<${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>`,
+                options: {
+                    body: {
+                        class: 'pl-0 pt-1 pr-0'
+                    }
+                }
+            },
+            {
+                icon: "cogs",
+                title: "Execution",
+                body: html`
+                    <div class="container-fluid">
+                        <${EditorActions} running=${this.state.running} onPause=${this.pause.bind(this)} 
+                                          onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)} />
+                        ${queue}
+                    </div>
+                `
+            }
+        ]
         return html`
-            <${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>
-            ${queue}
-            <${EditorActions} onPause=${this.pause.bind(this)} onStepFW=${this.stepFW.bind(this)}
-                            onRun=${this.runCode.bind(this)} />
+            <${Accordion} sections=${sections} />
         `;
     }
 }
