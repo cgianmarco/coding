@@ -9,9 +9,18 @@ import Accordion from './components/Accordion.js'
 const html = htm.bind(h);
 
 class App extends Component {
-    state = { 
-        running: false,
-        code: ` //Initial script
+    static makeEvalContext (declarations) {
+        eval(declarations);
+        return function (str) { eval(str); }
+    }
+    constructor(props) {
+        super(props)
+        let env = new Environment();
+        this.state = { 
+            env: env,
+            agent: new Agent(env),
+            running: false,
+            code: ` //Initial script
 for(let p = 0; p < 3; p++){
 
     for(let j = 0; j < 4; j++){
@@ -44,7 +53,9 @@ for(let p = 0; p < 3; p++){
     }
 }
 ` 
-    };
+        };
+        this.state.env.drawChanges();
+    }
     pause() {
         this.setState({running: false})
     }
@@ -55,8 +66,13 @@ for(let p = 0; p < 3; p++){
         if (this.state.running) {
             return;
         }
-        eval(this.state.code)
-        this.setState({running: true})
+        let ctx = {};
+        (new Function(`"use strict"; this.script = function(agent) { ${this.state.code}\n }`))
+            .apply(ctx) //🤯
+        ctx.script.apply(null, [this.state.agent])
+
+
+        this.updateState({running: true})
 		window.requestAnimationFrame(this.loop.bind(this))
     }
     loop() {
@@ -65,29 +81,19 @@ for(let p = 0; p < 3; p++){
             window.requestAnimationFrame(this.loop.bind(this));
         }
     }
+    updateState(update) {
+        this.setState(state => Object.assign(state, update))
+    }
     frame() {
-        function update() {
-            if(agent.commands.length > 0){
-                var op = agent.commands.shift()
-                agent.run(op[0], op[1])
-                return true;
-            }
-            return false
-        }
-
-        function draw() {
-                env.lastInserted.forEach(e => env.drawBlock(e))
-                env.lastInserted = []
-        }
-        if (update()) {
-            draw()
-            this.setState({running: this.state.running, code: this.state.code, queue: agent.commands.length})
+        if (this.state.agent.processNextCommand()) {
+            this.state.env.drawChanges();
+            this.updateState({})
         } else {
-            this.setState({running: false, code: this.state.code})
+            this.updateState({running: false})
         }
     }
     codeUpdated(code) {
-        this.setState({running: this.state.running, code: code})
+        this.updateState({code: code})
     }
     render() {
         let sections = [

@@ -37,6 +37,7 @@ return true;
 }
 
 
+/*
 function binarySearch(arr, x, map){
 
 return arr.findIndex(elem => arraysEqual(elem, x))
@@ -69,7 +70,7 @@ return arr.findIndex(elem => arraysEqual(elem, x))
 
 // return recursiveFunction(arr, x, map, 0, arr.length)
 }
-
+*/
 
 
 function howToSort(block1, block2){
@@ -88,12 +89,14 @@ class Environment {
 		this.pos = [8, 2, 1]
 		this.direction = [0, -1, 0]	
 
-		this.conf = []
+		this.conf = {}
 		for(let i = -20; i < 20; i++)
-			for(let j = -20; j < 20; j++)
-				this.conf.push([i, j, 0])
+			for(let j = -20; j < 20; j++) {
+				this.conf[[i, j, 0]] = {}
+				this.lastInserted.push([i, j, 0])
+			}
 
-		this.conf = this.conf.sort(howToSort)	
+		//this.conf = this.conf.sort(howToSort)	
 	}
 
 
@@ -123,14 +126,15 @@ class Environment {
 
 
 	isInConf(coord){
-		return binarySearch(this.conf, coord, distance) > -1
+		// return binarySearch(this.conf, coord, distance) > -1
+		return this.conf[coord]
 	}
 
 	insert(newpos){
 		if(!this.isInConf(newpos)){
-			this.conf.push(newpos)
-			this.conf.sort(howToSort)
-			this.lastInserted.push(this.conf[binarySearch(this.conf, newpos, distance)])
+			this.conf[newpos] = {}
+			// this.conf.sort(howToSort)
+			this.lastInserted.push(newpos)
 		}
 
 		
@@ -204,7 +208,7 @@ class Environment {
 	destroy(relative){
 		let direction = this.getAbsoluteDirection(relative)
 		let newpos = math.add(this.pos, direction)
-		this.conf = this.conf.filter(e => !arraysEqual(e, newpos))
+		this.conf[newpos] = null
 
 		let blockConfig = {
 			blockOnTop : {
@@ -388,6 +392,10 @@ class Environment {
 
 
 	}
+	drawChanges() {
+		this.lastInserted.forEach(e => this.drawBlock(e))
+		this.lastInserted = []
+	}
 
 }
 
@@ -422,5 +430,12 @@ run(command, direction){
 		this.env.place(direction)
 	if(command == DESTROY)
 		this.env.destroy(direction)
+}
+processNextCommand() {
+	let op = this.commands.shift()
+	if (op) {
+		this.run(op[0], op[1])
+	}
+	return op;
 }
 }

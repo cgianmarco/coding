@@ -17,7 +17,7 @@ function CommandsQueue(props) {
 }
 
 function EditorActions(props) {
-    let queue = props.process.queue ? html`<${CommandsQueue} queue=${props.process.queue} />` : null
+    let queue = props.process.agent.commands.length > 0 && html`<${CommandsQueue} queue=${props.process.agent.commands.length} />`;
 
     let buttons = [
         {
