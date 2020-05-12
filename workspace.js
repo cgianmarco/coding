@@ -153,9 +153,8 @@ for(let p = 0; p < 3; p++){
         }
 
         function draw() {
-            if(env.lastInserted != null)
-                env.drawBlock(env.conf[env.lastInserted])
-                // env.conf.forEach(v => env.drawBlock(v))
+                env.lastInserted.forEach(e => env.drawBlock(env.conf[e]))
+                env.lastInserted = []
         }
         if (update()) {
             draw()
