@@ -21,6 +21,9 @@ class CodeEditor extends Component {
         `
     }
 }
+function Icon(props) {
+    return html`<i class="fas fa-${props.icon}"></i>`
+}
 function EditorActions(props) {
     let buttons = [
         {
@@ -46,6 +49,19 @@ function EditorActions(props) {
             <div class="row border-top">
                 <div class="col pt-3 text-right">
                     ${buttons}
+                </div>
+            </div>
+        </div>
+    `
+}
+function CommandsQueue(props) {
+    return html`
+        <div class="container-fluid">
+            <div class="row border-top">
+                <div class="col pt-3">
+                    <div class="alert alert-info">
+                        <${Icon} icon="stream" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,7 +102,8 @@ for(let p = 0; p < 3; p++){
 
     }
 }
-` };
+` 
+    };
     pause() {
         this.setState({running: false})
     }
@@ -124,19 +141,22 @@ for(let p = 0; p < 3; p++){
         }
         if (update()) {
             draw()
+            this.setState({running: this.state.running, code: this.state.code, queue: agent.commands.length})
         } else {
-            this.setState({running: false})
+            this.setState({running: false, code: this.state.code})
         }
     }
     codeUpdated(code) {
-        this.setState({running: this.state.running, code: code})
+        this.setState({running: this.state.running, code: this.state.code})
     }
     render() {
-      return html`
-        <${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>
-        <${EditorActions} onPause=${this.pause.bind(this)} onStepFW=${this.stepFW.bind(this)}
-                          onRun=${this.runCode.bind(this)} />
-      `;
+        let queue = this.state.queue ? html`<${CommandsQueue} queue=${this.state.queue} />` : null
+        return html`
+            <${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>
+            ${queue}
+            <${EditorActions} onPause=${this.pause.bind(this)} onStepFW=${this.stepFW.bind(this)}
+                            onRun=${this.runCode.bind(this)} />
+        `;
     }
 }
 //Start app
