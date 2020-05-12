@@ -1,9 +1,14 @@
 import { h, Component, render,createRef } from 'https://unpkg.com/preact?module';
 import htm from 'https://unpkg.com/htm?module';
+import CodeEditor from './components/CodeEditor.js'
+import Icon from './components/Icon.js'
+import EditorActions from './components/EditorActions.js'
+import Accordion from './components/Accordion.js'
 
 // Initialize htm with Preact
 const html = htm.bind(h);
 
+/*
 class CodeEditor extends Component {
     editor = createRef();
     componentDidMount() {
@@ -21,37 +26,8 @@ class CodeEditor extends Component {
         `
     }
 }
-function Icon(props) {
-    return html`<i class="fas fa-${props.icon}"></i>`
-}
-function EditorActions(props) {
-    let buttons = [
-        {
-            class: 'btn-warning ' + (props.running ? '' : 'disabled'),
-            click: props.onPause,
-            icon: 'pause'
-        },
-        {
-            class: 'btn-info ' + (props.running ? 'disabled' : ''),
-            click: props.onStepFW,
-            icon: 'step-forward'
-        },
-        {
-            class: 'btn-info ' + (props.running ? 'disabled' : ''),
-            click: props.onRun,
-            icon: 'play',
-            text: 'Run'
-        }
-    ]
-    .map((b, i) => html`<button class="btn shadow mr-2 btn ${i > 0 ? 'ml-2' : ''} ${b.class}" onClick=${b.click}><i class="fas fa-${b.icon}"></i> ${b.text}</button>`)
-    return html`
-        <div class="row">
-            <div class="col pt-3 text-right">
-                ${buttons}
-            </div>
-        </div>
-    `
-}
+*/
+
 function CommandsQueue(props) {
     return html`
         <div class="row">
@@ -63,28 +39,7 @@ function CommandsQueue(props) {
         </div>
     `
 }
-function Accordion(props) {
-    let read = (prop, v) => prop.reduce((agg, p) => agg && agg[p], v)
-    var sections = props.sections
-        .map((section, idx) => {
-            return html`
-                <div class="card">
-                    <div class="card-header">
-                        <button class="btn btn-link btn-sm" type="button" ><${Icon} icon="${section.icon}" /> ${section.title}</button>
-                    </div>
-                    <div class="collapse ${idx == 0 ? 'show' : 'show'}">
-                        <div class="card-body ${read(['options', 'body', 'class'], section)}">
-                            ${section.body}
-                        </div>
-                    </div>
-                </div>
-            `})
-    return html`
-        <div class="accordion">
-            ${sections}
-        </div>
-    `
-}
+
 class App extends Component {
     state = { 
         running: false,
