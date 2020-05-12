@@ -5,9 +5,9 @@ import Icon from './Icon.js'
 const html = htm.bind(h);
 
 function tooltip(elem, text) {
-    tippy(elem, {
-        content: text
-    })
+    // tippy(elem, {
+    //     content: text
+    // })
 }
 class CodeEditor extends Component {
     editor = createRef();
