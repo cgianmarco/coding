@@ -50,6 +50,11 @@ function EditorActions(props) {
                 </div>
             </div>
         </div>
+        <div class="row">
+            <div class="col">
+                ${queue}
+            </div>
+        </div>
     `
 }
 
