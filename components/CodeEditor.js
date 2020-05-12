@@ -73,7 +73,7 @@ class CodeEditor extends Component {
                 </div>
             </div>
             <div class="side-editor">
-                <textarea ref=${this.editor} rows="40">${props.code}</textarea>
+                <textarea ref=${this.editor}>${props.code}</textarea>
             </div>
         `
     }
