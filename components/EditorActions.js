@@ -42,8 +42,8 @@ function EditorActions(props) {
         }
     ]
     .map((b, i) => html`
-        <button class="btn col mr-1 btn ${b.class}" onClick=${b.click}>
-<div><${Icon} icon=${b.icon} /></div><div>${b.text}</div>
+        <button class="btn col btn ${b.class}" onClick=${b.click}>
+            <div><${Icon} icon=${b.icon} /></div><div>${b.text}</div>
         </button>
     `)
     return html`
