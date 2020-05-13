@@ -124,7 +124,7 @@ class Environment {
 		return this.conf[coord]
 	}
 
-	insert(newpos, colors){
+	place(newpos, colors){
 		if(!this.isInConf(newpos)){
 			this.conf[newpos] = colors
 			// this.conf.sort(howToSort)
@@ -134,77 +134,12 @@ class Environment {
 				side : colors.side
 			})
 		}
+	}
 
 		
-		// if(this.conf.length == 0){
-		// 	this.conf.push(newpos)
-		// 	return 0
-		// }else{
-		// 	let i = 0;
-			
-		// 	while(distance(newpos) > distance(this.conf[i])){
-				
-		// 		if(i == this.conf.length - 1)
-		// 			break
-		// 		i = i + 1
-		// 	}
-		// 	if(arraysEqual(newpos, this.conf[i]))
-		// 		return null
-		// 	else{
-		// 		this.conf = this.conf.slice(0, i).concat([newpos], this.conf.slice(i, this.conf.length))
-		// 		return i
-		// 	}
+	
 
-		// }		
-		
-	}
-
-
-	getAbsoluteDirection(direction, relative){
-
-		if(relative == LEFT)
-			return math.multiply(LEFT_ROT, direction).toArray()
-
-		if(relative == RIGHT)
-			return math.multiply(RIGHT_ROT, direction).toArray()
-
-		if(relative == FORWARD)
-			return direction
-
-		if(relative == BACK)
-			return math.multiply(-1, direction)
-
-		if(relative == UP)
-			return [0, 0, 1]
-		if(relative == DOWN)
-			return [0, 0, -1]
-
-	}
-
-
-	move(position, direction, relative){
-		let absolute = this.getAbsoluteDirection(direction, relative)	
-		let newpos = math.add(position, absolute)
-
-		if(!this.isInConf(newpos))
-			return newpos
-		return position
-
-	}
-
-	turn(direction, relative){
-		return this.getAbsoluteDirection(direction, relative)
-	}
-
-	place(position, direction, relative, colors){
-		let absolute = this.getAbsoluteDirection(direction, relative)
-		let newpos = math.add(position, absolute)
-		this.insert(newpos, colors)
-	}
-
-	destroy(position, direction, relative){
-		let absolute = this.getAbsoluteDirection(direction, relative)
-		let newpos = math.add(position, absolute)
+	destroy(newpos){
 		delete this.conf[newpos]
 
 		let blockConfig = {
@@ -450,14 +385,29 @@ class Agent {
 	}
 
 	run(command, relative){
-		if(command == MOVE)
-			this.position = this.env.move(this.position, this.direction, relative)
-		if(command == TURN)
-			this.direction = this.env.turn(this.direction, relative)
-		if(command == PLACE)
-			this.env.place(this.position, this.direction, relative, this.colors)
-		if(command == DESTROY)
-			this.env.destroy(this.position, this.direction, relative)
+
+		if(command == MOVE){
+			let absolute = this.getAbsoluteDirection(this.direction, relative)
+			let newpos = math.add(this.position, absolute)
+			if(!this.env.isInConf(newpos))
+				this.position = newpos
+		}
+		if(command == TURN){
+			this.direction = this.getAbsoluteDirection(this.direction, relative)
+		}
+
+		if(command == PLACE){
+			let absolute = this.getAbsoluteDirection(this.direction, relative)
+			let newpos = math.add(this.position, absolute)
+			this.env.place(newpos, this.colors)
+		}
+
+		if(command == DESTROY){
+			let absolute = this.getAbsoluteDirection(this.direction, relative)
+			let newpos = math.add(this.position, absolute)
+			this.env.destroy(newpos)
+		}
+
 		if(command == SET_COLOR)
 			this.colors = relative
 	}
@@ -468,5 +418,27 @@ class Agent {
 			this.run(op[0], op[1])
 		}
 		return op;
+	}
+
+
+	getAbsoluteDirection(direction, relative){
+
+		if(relative == LEFT)
+			return math.multiply(LEFT_ROT, direction).toArray()
+
+		if(relative == RIGHT)
+			return math.multiply(RIGHT_ROT, direction).toArray()
+
+		if(relative == FORWARD)
+			return direction
+
+		if(relative == BACK)
+			return math.multiply(-1, direction)
+
+		if(relative == UP)
+			return [0, 0, 1]
+		if(relative == DOWN)
+			return [0, 0, -1]
+
 	}
 }
