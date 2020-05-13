@@ -9,6 +9,7 @@ MOVE = 'move'
 TURN = 'turn'
 PLACE = 'place'
 DESTROY = 'destroy'
+SET_COLOR = 'set_color'
 
 LEFT_ROT = math.matrix([[0, 1, 0],
 				   [-1, 0, 0],
@@ -91,7 +92,7 @@ class Environment {
 		this.conf = {}
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++) {
-				this.conf[[i, j, 0]] = {}
+				this.conf[[i, j, 0]] = { color : TOP_COLOR }
 				this.lastInserted.push([i, j, 0])
 			}
 		Drawing.clean()
@@ -103,9 +104,9 @@ class Environment {
 		return this.conf[coord]
 	}
 
-	insert(newpos){
+	insert(newpos, col){
 		if(!this.isInConf(newpos)){
-			this.conf[newpos] = {}
+			this.conf[newpos] = { color : col}
 			// this.conf.sort(howToSort)
 			this.lastInserted.push(newpos)
 		}
@@ -171,16 +172,16 @@ class Environment {
 		return this.getAbsoluteDirection(direction, relative)
 	}
 
-	place(position, direction, relative){
+	place(position, direction, relative, color){
 		let absolute = this.getAbsoluteDirection(direction, relative)
 		let newpos = math.add(position, absolute)
-		this.insert(newpos)
+		this.insert(newpos, color)
 	}
 
 	destroy(position, direction, relative){
 		let absolute = this.getAbsoluteDirection(direction, relative)
 		let newpos = math.add(position, absolute)
-		this.conf[newpos] = null
+		delete this.conf[newpos]
 
 		let blockConfig = {
 			blockOnTop : {
@@ -230,13 +231,10 @@ class Environment {
 	}
 
 
-	drawBlock(coords){
+	drawBlock(coords, color){
 
 		let [x, y, z] = coords
-		let TOP = TOP_DEFAULT
-
-		if (z * 10 < 86)
-			TOP = Drawing.rgb(172-z*10, 214-z*10, 86-z*10)
+		let TOP = Drawing.scaleColorHeight(color, z)
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
@@ -365,7 +363,7 @@ class Environment {
 
 	}
 	drawChanges() {
-		this.lastInserted.forEach(e => this.drawBlock(e))
+		this.lastInserted.forEach(e => this.drawBlock(e, this.conf[e].color))
 		this.lastInserted = []
 	}
 
@@ -378,7 +376,8 @@ class Agent {
 	    this.commands = []
 		this.env = env
 		this.position = [8, 2, 1]
-		this.direction = [0, -1, 0]	
+		this.direction = [0, -1, 0]
+		this.color = TOP_COLOR	
 	}
 	move(direction, steps=1) {
 		for(let i = 0; i < steps; i++)
@@ -395,15 +394,21 @@ class Agent {
 	    this.commands.push([DESTROY, direction])
 	}
 
+	set_color(r,g,b) {
+	    this.commands.push([SET_COLOR, [r,g,b]])
+	}
+
 	run(command, relative){
 		if(command == MOVE)
 			this.position = this.env.move(this.position, this.direction, relative)
 		if(command == TURN)
 			this.direction = this.env.turn(this.direction, relative)
 		if(command == PLACE)
-			this.env.place(this.position, this.direction, relative)
+			this.env.place(this.position, this.direction, relative, this.color)
 		if(command == DESTROY)
 			this.env.destroy(this.position, this.direction, relative)
+		if(command == SET_COLOR)
+			this.color = relative
 	}
 
 	processNextCommand() {
