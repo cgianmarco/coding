@@ -97,7 +97,21 @@ class Environment {
 					side : SIDE_DEFAULT
 				}
 
-				this.lastInserted.push([i, j, 0])
+				this.lastInserted.push({ 
+					coords : [i, j, 0],
+					top : TOP_DEFAULT,
+					side : SIDE_DEFAULT
+				})
+				// this.conf[[i, j, -1]] = { 
+				// 	top : [255,255,255],
+				// 	side : [255,255,255]
+				// }
+
+				// this.lastInserted.push({ 
+				// 	coords : [i, j, 0],
+				// 	top : TOP_DEFAULT,
+				// 	side : SIDE_DEFAULT
+				// })
 			}
 
 			
@@ -114,7 +128,11 @@ class Environment {
 		if(!this.isInConf(newpos)){
 			this.conf[newpos] = colors
 			// this.conf.sort(howToSort)
-			this.lastInserted.push(newpos)
+			this.lastInserted.push({
+				coords: newpos,
+				top : colors.top,
+				side : colors.side
+			})
 		}
 
 		
@@ -219,22 +237,40 @@ class Environment {
 			}
 		}
 
+
+		let point_behind = this.firstPointOnDiagonal(math.add(newpos, [0,0,0]), -1)
+		if (!point_behind)
+			this.lastInserted.push({ 
+						coords : newpos,
+						top : [255,255,255],
+						side : [255,255,255]
+					})
+
+		
+
 		Object.values(blockConfig).forEach(e => {
-			let firstPoint = this.firstPointOnDiagonal(math.add(newpos, math.multiply(-1, e.shift)), -1)
+			let startPoint = math.add(newpos, math.multiply(-1, e.shift))
+			let firstPoint = this.firstPointOnDiagonal(startPoint, -1)
 			if(firstPoint)
-				this.lastInserted.push(firstPoint)
+				this.lastInserted.push({ 
+					coords : firstPoint,
+					top : this.conf[firstPoint].top,
+					side : this.conf[firstPoint].side
+				})
 		})
+
 	}
 
 	// direction 1 for forward diagonal, -1 for back diagonal
 	firstPointOnDiagonal(start, direction){
-		for(let k = 0; k < 20; k++){
+		for(let k = 0; k < 100; k++){
 			let point = math.add(start, math.multiply(direction, [k,k,k]))
 			if(this.isInConf(point))
 				return point
 		}
 		return null
 	}
+
 
 
 	drawBlock(coords, colors){
@@ -371,7 +407,11 @@ class Environment {
 
 	}
 	drawChanges() {
-		this.lastInserted.forEach(e => this.drawBlock(e, this.conf[e]))
+		Object.values(this.lastInserted).forEach(e => {
+			this.drawBlock(e.coords, { top: e.top,
+										side: e.side
+									})
+		})
 		this.lastInserted = []
 	}
 
@@ -383,7 +423,7 @@ class Agent {
 	constructor(env) {
 	    this.commands = []
 		this.env = env
-		this.position = [8, 2, 1]
+		this.position = [0,0,1]
 		this.direction = [0, -1, 0]
 		this.colors = { 
 			top : TOP_DEFAULT,
