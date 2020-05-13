@@ -1,6 +1,8 @@
 import { h, Component, render,createRef } from 'https://unpkg.com/preact?module';
 import htm from 'https://unpkg.com/htm?module';
 import Icon from './Icon.js'
+import ScriptsManager from './ScriptsManager.js'
+
 // Initialize htm with Preact
 const html = htm.bind(h);
 
@@ -67,21 +69,30 @@ class CodeEditor extends Component {
         this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
         this.buttons.forEach(tooltip)
     }
+    onLoadScript(script) {
+        console.log(script)
+        this.codeMirror.setValue(script.code)
+    }
     render(props) {
         let actions = this.buttons.map((action, idx) => html`
             <button ref=${action.ref} title="${action.title}" class="btn btn-light ${idx > 0 ? 'border-left' : ''}" onClick=${() => action.fn(this.codeMirror)}>
                 <${Icon} icon=${action.icon} />
             </button>
         `)
-
+        if (this.codeMirror && props.code != this.codeMirror.getValue()) {
+            this.codeMirror.setValue(props.code)
+        }
         return html`
+            <div class="row border-bottom">
+                <${ScriptsManager} onLoadScript=${this.onLoadScript.bind(this)} code=${this.codeMirror && this.codeMirror.getValue()} />
+            </div>
             <div class="row">
                 <div class="col btn-group border-bottom">
                     ${actions}
                 </div>
             </div>
             <div class="side-editor">
-                <textarea ref=${this.editor}>${props.code}</textarea>
+                <textarea ref=${this.editor}></textarea>
             </div>
         `
     }
