@@ -6,18 +6,14 @@ const html = htm.bind(h);
 
 function CommandsQueue(props) {
     return html`
-        <div class="row">
-            <div class="col pt-3">
-                <div class="alert alert-info">
-                    <${Icon} icon="stream" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
-                </div>
-            </div>
+        <div class="col pt-3 alert alert-info">
+            <${Icon} icon="stopwatch" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
         </div>
     `
 }
 
 function EditorActions(props) {
-    let queue = props.process.agent.commands.length > 0 && html`<${CommandsQueue} queue=${props.process.agent.commands.length} />`;
+    let queue = html`<${CommandsQueue} queue=${props.process.agent.commands.length} />`;
 
     let buttons = [
         {
@@ -52,12 +48,10 @@ function EditorActions(props) {
     `)
     return html`
         <div class="row">
-            ${buttons}
+            ${queue}
         </div>
-        <div class="row">
-            <div class="col">
-                ${queue}
-            </div>
+        <div class="row mt-1">
+            ${buttons}
         </div>
     `
 }

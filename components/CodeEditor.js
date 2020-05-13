@@ -4,9 +4,9 @@ import Icon from './Icon.js'
 // Initialize htm with Preact
 const html = htm.bind(h);
 
-function tooltip(elem) {
-    tippy(elem, {
-        content: elem.title
+function tooltip(button) {
+    tippy(button.ref.current, {
+        content: button.title
     })
 }
 class CodeEditor extends Component {
@@ -14,41 +14,21 @@ class CodeEditor extends Component {
     buttons = []
     constructor(props) {
         super(props)
-        this.buttons[0] = createRef();
-        this.buttons[1] = createRef();
-        this.buttons[2] = createRef();
-    }
-    componentDidMount() {
-        this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
-            lineNumbers: true,
-            mode:  "javascript",
-            gutters: ["CodeMirror-lint-markers"],
-            lint: {
-                "esversion": 6,
-                "asi": true
-              }
-            // lintFix: { getFixes: getFixes }
-        });
-        this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
-        this.buttons.map(b => b.current).forEach(tooltip)
-    }
-    render(props) {
-        let codeMirror = this.codeMirror;
-        let actions = [
+        this.buttons = [
             {
                 title: "Undo",
                 icon: 'undo',
-                fn: e => codeMirror.undo()
+                fn: codeMirror => codeMirror.undo()
             },
             {
                 title: "Redo",
                 icon: 'redo',
-                fn: e => codeMirror.redo()
+                fn: codeMirror => codeMirror.redo()
             },
             {
                 title: "Format",
                 icon: 'indent',
-                fn: e => {
+                fn: codeMirror => {
                     let cursor = codeMirror.getCursor();
                     codeMirror.setSelection(
                         {
@@ -68,12 +48,32 @@ class CodeEditor extends Component {
                     codeMirror.setCursor(cursor)
                 }
             }
-        ]
-        .map((action, idx) => html`
-            <button ref=${this.buttons[idx]} title="${action.title}" class="btn btn-light ${idx > 0 ? 'border-left' : ''}" onClick=${action.fn}>
+        ].map(button => {
+            button.ref = createRef()
+            return button;
+        });
+    }
+    componentDidMount() {
+        this.codeMirror = CodeMirror.fromTextArea(this.editor.current, {
+            lineNumbers: true,
+            mode:  "javascript",
+            gutters: ["CodeMirror-lint-markers"],
+            lint: {
+                "esversion": 6,
+                "asi": true
+              }
+            // lintFix: { getFixes: getFixes }
+        });
+        this.codeMirror.on('change', event => this.props.onUpdate(this.codeMirror.getValue()))
+        this.buttons.forEach(tooltip)
+    }
+    render(props) {
+        let actions = this.buttons.map((action, idx) => html`
+            <button ref=${action.ref} title="${action.title}" class="btn btn-light ${idx > 0 ? 'border-left' : ''}" onClick=${() => action.fn(this.codeMirror)}>
                 <${Icon} icon=${action.icon} />
             </button>
         `)
+
         return html`
             <div class="row">
                 <div class="col btn-group border-bottom">

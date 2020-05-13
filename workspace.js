@@ -51,20 +51,20 @@ for(let p = 0; p < 3; p++){
 }
 ` 
         };
-        window.requestAnimationFrame(this.frame.bind(this));
+        setTimeout(this.frame.bind(this), 0);
     }
     pause() {
         this.setState({running: false})
     }
     stepFW() {
         this.executeCode()
-        window.requestAnimationFrame(this.frame.bind(this));
+        this.frame();
     }
     reset() {
         let env = new Environment()
         let agent = new Agent(env)
         this.updateState({env, agent})
-        window.requestAnimationFrame(this.frame.bind(this));
+        this.frame();
     }
     runCode() {
         if (this.state.running) {
@@ -72,26 +72,27 @@ for(let p = 0; p < 3; p++){
         }
         this.executeCode()
         this.updateState({running: true})
-        window.requestAnimationFrame(this.play.bind(this));
+        setTimeout(this.play.bind(this), 0);
     }
     play() {
         if (this.state.running) {
-            window.requestAnimationFrame(e => {
-                this.frame()
-                setTimeout(this.play.bind(this), 0)
-            });
+            this.frame(this.play.bind(this))
         } 
     }
     updateState(update) {
         this.setState(state => Object.assign(state, update))
     }
-    frame() {
+    frame(callback) {
         if (this.state.agent.processNextCommand()) {
             this.updateState({})
         } else {
             this.updateState({running: false})
         }
-        this.state.env.drawChanges();
+        window.requestAnimationFrame(() => {
+            this.state.env.drawChanges();
+            callback && setTimeout(callback, 0);
+        })
+        
     }
     executeCode() {
         if (this.state.agent.commands.length == 0) {
