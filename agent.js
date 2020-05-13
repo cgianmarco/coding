@@ -92,9 +92,15 @@ class Environment {
 		this.conf = {}
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++) {
-				this.conf[[i, j, 0]] = { color : TOP_COLOR }
+				this.conf[[i, j, 0]] = { 
+					top : TOP_DEFAULT,
+					side : SIDE_DEFAULT
+				}
+
 				this.lastInserted.push([i, j, 0])
 			}
+
+			
 		Drawing.clean()
 	}
 
@@ -104,9 +110,9 @@ class Environment {
 		return this.conf[coord]
 	}
 
-	insert(newpos, col){
+	insert(newpos, colors){
 		if(!this.isInConf(newpos)){
-			this.conf[newpos] = { color : col}
+			this.conf[newpos] = colors
 			// this.conf.sort(howToSort)
 			this.lastInserted.push(newpos)
 		}
@@ -172,10 +178,10 @@ class Environment {
 		return this.getAbsoluteDirection(direction, relative)
 	}
 
-	place(position, direction, relative, color){
+	place(position, direction, relative, colors){
 		let absolute = this.getAbsoluteDirection(direction, relative)
 		let newpos = math.add(position, absolute)
-		this.insert(newpos, color)
+		this.insert(newpos, colors)
 	}
 
 	destroy(position, direction, relative){
@@ -231,10 +237,12 @@ class Environment {
 	}
 
 
-	drawBlock(coords, color){
+	drawBlock(coords, colors){
 
 		let [x, y, z] = coords
-		let TOP = Drawing.scaleColorHeight(color, z)
+
+		let top_color = Drawing.scaleColorHeight(colors.top, z)
+		let [left_color, right_color] = Drawing.scaleColorSide(colors.side)
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
@@ -271,32 +279,32 @@ class Environment {
 			top_left : {
 				draw : true,
 				points: points_top_left,
-				color : TOP
+				color : top_color
 			},
 			top_right : {
 				draw : true,
 				points: points_top_right,
-				color : TOP
+				color : top_color
 			},
 			left_top : {
 				draw : true,
 				points: points_left_top,
-				color : LEFT_COLOR
+				color : left_color
 			},
 			left_down : {
 				draw : true,
 				points: points_left_down,
-				color : LEFT_COLOR
+				color : left_color
 			},
 			right_top : {
 				draw : true,
 				points: points_right_top,
-				color : RIGHT_COLOR
+				color : right_color
 			},
 			right_down : {
 				draw : true,
 				points: points_right_down,
-				color : RIGHT_COLOR
+				color : right_color
 			}
 		}
 
@@ -363,7 +371,7 @@ class Environment {
 
 	}
 	drawChanges() {
-		this.lastInserted.forEach(e => this.drawBlock(e, this.conf[e].color))
+		this.lastInserted.forEach(e => this.drawBlock(e, this.conf[e]))
 		this.lastInserted = []
 	}
 
@@ -377,7 +385,10 @@ class Agent {
 		this.env = env
 		this.position = [8, 2, 1]
 		this.direction = [0, -1, 0]
-		this.color = TOP_COLOR	
+		this.colors = { 
+			top : TOP_DEFAULT,
+			side : SIDE_DEFAULT
+		}
 	}
 	move(direction, steps=1) {
 		for(let i = 0; i < steps; i++)
@@ -394,8 +405,8 @@ class Agent {
 	    this.commands.push([DESTROY, direction])
 	}
 
-	set_color(r,g,b) {
-	    this.commands.push([SET_COLOR, [r,g,b]])
+	set_color(colors) {
+	    this.commands.push([SET_COLOR, colors])
 	}
 
 	run(command, relative){
@@ -404,11 +415,11 @@ class Agent {
 		if(command == TURN)
 			this.direction = this.env.turn(this.direction, relative)
 		if(command == PLACE)
-			this.env.place(this.position, this.direction, relative, this.color)
+			this.env.place(this.position, this.direction, relative, this.colors)
 		if(command == DESTROY)
 			this.env.destroy(this.position, this.direction, relative)
 		if(command == SET_COLOR)
-			this.color = relative
+			this.colors = relative
 	}
 
 	processNextCommand() {
