@@ -236,7 +236,7 @@ class Environment {
 		let TOP = TOP_DEFAULT
 
 		if (z * 10 < 86)
-			TOP = rgb(172-z*10, 214-z*10, 86-z*10)
+			TOP = Drawing.rgb(172-z*10, 214-z*10, 86-z*10)
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
@@ -359,7 +359,7 @@ class Environment {
 		})
 
 		Object.values(drawConfig).filter(e => e.draw).forEach(e => {
-			drawPolygon(e.points, e.color)
+			Drawing.drawPolygon(e.points, e.color)
 		})
 
 
