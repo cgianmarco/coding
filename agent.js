@@ -9,6 +9,7 @@ MOVE = 'move'
 TURN = 'turn'
 PLACE = 'place'
 DESTROY = 'destroy'
+SET_COLOR = 'set_color'
 
 LEFT_ROT = math.matrix([[0, 1, 0],
 				   [-1, 0, 0],
@@ -21,19 +22,19 @@ RIGHT_ROT = math.matrix([[0, -1, 0],
 
 
 function arraysEqual(a, b) {
-if (a === b) return true;
-if (a == null || b == null) return false;
-if (a.length != b.length) return false;
+	if (a === b) return true;
+	if (a == null || b == null) return false;
+	if (a.length != b.length) return false;
 
-// If you don't care about the order of the elements inside
-// the array, you should sort both arrays here.
-// Please note that calling sort on an array will modify that array.
-// you might want to clone your array first.
+	// If you don't care about the order of the elements inside
+	// the array, you should sort both arrays here.
+	// Please note that calling sort on an array will modify that array.
+	// you might want to clone your array first.
 
-for (var i = 0; i < a.length; ++i) {
-if (a[i] !== b[i]) return false;
-}
-return true;
+	for (var i = 0; i < a.length; ++i) {
+		if (a[i] !== b[i]) return false;
+	}
+	return true;
 }
 
 
@@ -74,54 +75,27 @@ return arr.findIndex(elem => arraysEqual(elem, x))
 
 
 function howToSort(block1, block2){
-return block1[0] + block1[1] + block1[2] - block2[0] - block2[1] - block2[2]
+	return block1[0] + block1[1] + block1[2] - block2[0] - block2[1] - block2[2]
 }
 
 
 function distance(coord){
-return coord[0] + coord[1] + coord[2]
+	return coord[0] + coord[1] + coord[2]
 }
 
 class Environment {
 
 	constructor(){
 		this.lastInserted = []
-		this.pos = [8, 2, 1]
-		this.direction = [0, -1, 0]	
+		
 
 		this.conf = {}
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++) {
-				this.conf[[i, j, 0]] = {}
+				this.conf[[i, j, 0]] = { color : TOP_COLOR }
 				this.lastInserted.push([i, j, 0])
 			}
 		Drawing.clean()
-		//this.conf = this.conf.sort(howToSort)	
-	}
-
-
-	blockOnLeft(coord){
-		return math.add([0, 1, 0], coord)
-	}
-
-	blockOnRight(coord){
-		return math.add([1, 0, 0], coord)
-	}
-
-	blockOnTop(coord){
-		return math.add([0, 0, 1], coord)
-	}
-
-	blockOnTopRight(coord){
-		return math.add([1, 0, 1], coord)
-	}
-
-	blockOnTopLeft(coord){
-		return math.add([0, 1, 1], coord)
-	}
-
-	blockInFront(coord){
-		return math.add([1, 1, 0], coord)
 	}
 
 
@@ -130,9 +104,9 @@ class Environment {
 		return this.conf[coord]
 	}
 
-	insert(newpos){
+	insert(newpos, col){
 		if(!this.isInConf(newpos)){
-			this.conf[newpos] = {}
+			this.conf[newpos] = { color : col}
 			// this.conf.sort(howToSort)
 			this.lastInserted.push(newpos)
 		}
@@ -162,19 +136,19 @@ class Environment {
 	}
 
 
-	getAbsoluteDirection(relative){
+	getAbsoluteDirection(direction, relative){
 
 		if(relative == LEFT)
-			return math.multiply(LEFT_ROT, this.direction).toArray()
+			return math.multiply(LEFT_ROT, direction).toArray()
 
 		if(relative == RIGHT)
-			return math.multiply(RIGHT_ROT, this.direction).toArray()
+			return math.multiply(RIGHT_ROT, direction).toArray()
 
 		if(relative == FORWARD)
-			return this.direction
+			return direction
 
 		if(relative == BACK)
-			return math.multiply(-1, this.direction)
+			return math.multiply(-1, direction)
 
 		if(relative == UP)
 			return [0, 0, 1]
@@ -184,29 +158,30 @@ class Environment {
 	}
 
 
-	move(relative){
-		let direction = this.getAbsoluteDirection(relative)		
-		let newpos = math.add(this.pos, direction)
+	move(position, direction, relative){
+		let absolute = this.getAbsoluteDirection(direction, relative)	
+		let newpos = math.add(position, absolute)
 
 		if(!this.isInConf(newpos))
-			this.pos = newpos
+			return newpos
+		return position
 
 	}
 
-	turn(relative){
-		this.direction = this.getAbsoluteDirection(relative)
+	turn(direction, relative){
+		return this.getAbsoluteDirection(direction, relative)
 	}
 
-	place(relative){
-		let direction = this.getAbsoluteDirection(relative)
-		let newpos = math.add(this.pos, direction)
-		this.insert(newpos)
+	place(position, direction, relative, color){
+		let absolute = this.getAbsoluteDirection(direction, relative)
+		let newpos = math.add(position, absolute)
+		this.insert(newpos, color)
 	}
 
-	destroy(relative){
-		let direction = this.getAbsoluteDirection(relative)
-		let newpos = math.add(this.pos, direction)
-		this.conf[newpos] = null
+	destroy(position, direction, relative){
+		let absolute = this.getAbsoluteDirection(direction, relative)
+		let newpos = math.add(position, absolute)
+		delete this.conf[newpos]
 
 		let blockConfig = {
 			blockOnTop : {
@@ -256,13 +231,10 @@ class Environment {
 	}
 
 
-	drawBlock(coords){
+	drawBlock(coords, color){
 
 		let [x, y, z] = coords
-		let TOP = TOP_DEFAULT
-
-		if (z * 10 < 86)
-			TOP = rgb(172-z*10, 214-z*10, 86-z*10)
+		let TOP = Drawing.scaleColorHeight(color, z)
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
@@ -385,13 +357,13 @@ class Environment {
 		})
 
 		Object.values(drawConfig).filter(e => e.draw).forEach(e => {
-			drawPolygon(e.points, e.color)
+			Drawing.drawPolygon(e.points, e.color)
 		})
 
 
 	}
 	drawChanges() {
-		this.lastInserted.forEach(e => this.drawBlock(e))
+		this.lastInserted.forEach(e => this.drawBlock(e, this.conf[e].color))
 		this.lastInserted = []
 	}
 
@@ -400,41 +372,50 @@ class Environment {
 
 
 class Agent {
-constructor(env) {
-    this.commands = []
-	this.env = env
-	this.position = [15, 15, 1]
-}
-move(direction, steps=1) {
-	for(let i = 0; i < steps; i++)
-   		this.commands.push([MOVE, direction])
-}
-turn(direction) {
-    this.commands.push([TURN, direction])
-}
-place(direction) {
-    this.commands.push([PLACE, direction])
-}
-
-destroy(direction) {
-    this.commands.push([DESTROY, direction])
-}
-
-run(command, direction){
-	if(command == MOVE)
-		this.env.move(direction)
-	if(command == TURN)
-		this.env.turn(direction)
-	if(command == PLACE)
-		this.env.place(direction)
-	if(command == DESTROY)
-		this.env.destroy(direction)
-}
-processNextCommand() {
-	let op = this.commands.shift()
-	if (op) {
-		this.run(op[0], op[1])
+	constructor(env) {
+	    this.commands = []
+		this.env = env
+		this.position = [8, 2, 1]
+		this.direction = [0, -1, 0]
+		this.color = TOP_COLOR	
 	}
-	return op;
-}
+	move(direction, steps=1) {
+		for(let i = 0; i < steps; i++)
+	   		this.commands.push([MOVE, direction])
+	}
+	turn(direction) {
+	    this.commands.push([TURN, direction])
+	}
+	place(direction) {
+	    this.commands.push([PLACE, direction])
+	}
+
+	destroy(direction) {
+	    this.commands.push([DESTROY, direction])
+	}
+
+	set_color(r,g,b) {
+	    this.commands.push([SET_COLOR, [r,g,b]])
+	}
+
+	run(command, relative){
+		if(command == MOVE)
+			this.position = this.env.move(this.position, this.direction, relative)
+		if(command == TURN)
+			this.direction = this.env.turn(this.direction, relative)
+		if(command == PLACE)
+			this.env.place(this.position, this.direction, relative, this.color)
+		if(command == DESTROY)
+			this.env.destroy(this.position, this.direction, relative)
+		if(command == SET_COLOR)
+			this.color = relative
+	}
+
+	processNextCommand() {
+		let op = this.commands.shift()
+		if (op) {
+			this.run(op[0], op[1])
+		}
+		return op;
+	}
 }
