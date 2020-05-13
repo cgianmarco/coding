@@ -6,8 +6,10 @@ const html = htm.bind(h);
 
 function CommandsQueue(props) {
     return html`
-        <div class="col pt-3 alert alert-info">
-            <${Icon} icon="stopwatch" /> <span>actions to complete</span> <span class="badge badge-pill badge-info">${props.queue}</span>
+        <div class="col d-flex pt-3 alert alert-info">
+            <div class="flex-column"><${Icon} icon="stopwatch" /></div>
+            <div class="flex-column ml-2"><span>actions to complete</span></div>
+            <div class="flex-column align-self-center ml-2"><span class="badge badge-pill badge-info">${props.queue}</span></div>
         </div>
     `
 }
@@ -42,7 +44,7 @@ function EditorActions(props) {
         }
     ]
     .map((b, i) => html`
-        <button class="btn col btn ${b.class}" onClick=${b.click}>
+        <button class="btn col btn ${b.class} ${i > 0 ? 'ml-1' : ''}" onClick=${b.click}>
             <div><${Icon} icon=${b.icon} /></div><div>${b.text}</div>
         </button>
     `)

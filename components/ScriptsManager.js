@@ -75,7 +75,7 @@ function ScriptsCarousel(props){
 }
 class ScriptsManager extends Component {
     state = {
-        files: true,
+        files: false,
         current: null
     }
     constructor(props) {
