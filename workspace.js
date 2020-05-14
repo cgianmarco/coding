@@ -84,13 +84,13 @@ for(let p = 0; p < 3; p++){
     }
     frame(callback) {
         if (this.state.agent.processNextCommand()) {
-            this.updateState({})
+            //this.updateState({})
         } else {
             this.updateState({running: false})
         }
         window.requestAnimationFrame(() => {
             this.state.env.drawChanges();
-            callback && setTimeout(callback, 0);
+            callback && callback();
         })
         
     }

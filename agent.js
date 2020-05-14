@@ -90,6 +90,8 @@ class Environment {
 		
 
 		this.conf = {}
+		Drawing.clean()
+
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++) {
 				this.conf[[i, j, 0]] = { 
@@ -97,11 +99,12 @@ class Environment {
 					side : SIDE_DEFAULT
 				}
 
-				this.lastInserted.push({ 
-					coords : [i, j, 0],
-					top : TOP_DEFAULT,
-					side : SIDE_DEFAULT
-				})
+				this.drawBlock([i, j, 0], {top: TOP_DEFAULT, side: SIDE_DEFAULT}, true)
+				// this.lastInserted.push({ 
+				// 	coords : [i, j, 0],
+				// 	top : TOP_DEFAULT,
+				// 	side : SIDE_DEFAULT
+				// })
 				// this.conf[[i, j, -1]] = { 
 				// 	top : [255,255,255],
 				// 	side : [255,255,255]
@@ -115,7 +118,6 @@ class Environment {
 			}
 
 			
-		Drawing.clean()
 	}
 
 
@@ -208,7 +210,7 @@ class Environment {
 
 
 
-	drawBlock(coords, colors){
+	drawBlock(coords, colors, init){
 
 		let [x, y, z] = coords
 
@@ -277,6 +279,13 @@ class Environment {
 				points: points_right_down,
 				color : right_color
 			}
+		}
+
+		if (init) {
+			Object.values(drawConfig).filter(e => e.draw).forEach(e => {
+				Drawing.drawPolygon(e.points, e.color)
+			})
+			return
 		}
 
 		let blockConfig ={
