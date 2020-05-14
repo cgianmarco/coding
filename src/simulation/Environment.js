@@ -31,6 +31,27 @@ const RIGHT_ROT = math.matrix([[0, -1, 0],
 
 
 
+const ADJACENTS = {
+	top : [0,0,1],
+	topLeft : [0,1,1],
+	topRight : [1,0,1],
+	left : [0,1,0],
+	right : [1,0,0],
+	frontDown : [1,1,0],
+	frontUp : [1,1,1],
+}
+
+
+const TOP_LEFT = [ ADJACENTS['top'], ADJACENTS['topLeft'], ADJACENTS['frontUp'] ]
+const TOP_RIGHT = [ ADJACENTS['top'], ADJACENTS['topRight'], ADJACENTS['frontUp'] ]
+const LEFT_TOP = [ ADJACENTS['topLeft'], ADJACENTS['left'], ADJACENTS['frontUp'] ]
+const LEFT_DOWN = [ ADJACENTS['left'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
+const RIGHT_TOP = [ ADJACENTS['topRight'], ADJACENTS['right'], ADJACENTS['frontUp'] ]
+const RIGHT_DOWN = [ ADJACENTS['right'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
+
+
+
+
 function arraysEqual(a, b) {
 	if (a === b) return true;
 	if (a == null || b == null) return false;
@@ -45,6 +66,14 @@ function arraysEqual(a, b) {
 		if (a[i] !== b[i]) return false;
 	}
 	return true;
+}
+
+
+function any(arr, condition){
+	for(let i = 0; i < arr.length; i++)
+		if(condition(arr[i]))
+			return true
+	return false
 }
 
 
@@ -157,38 +186,7 @@ class Environment {
 	destroy(newpos){
 		delete this.conf[newpos]
 
-		let blockConfig = {
-			blockOnTop : {
-				shift : [0,0,1]
-			},
-
-			blockOnTopLeft : {
-				shift : [0,1,1],
-			},
-
-			blockOnTopRight : {
-				shift : [1,0,1],
-			},
-
-			blockOnLeft : {
-				shift : [0,1,0],
-			},
-
-			blockOnRight : {
-				shift : [1,0,0],
-			},
-
-			blockInFrontDown : {
-				shift : [1,1,0],
-			},
-
-			blockInFrontUp : {
-				shift : [1,1,1],
-			}
-		}
-
-
-		let point_behind = this.firstPointOnDiagonal(math.add(newpos, [0,0,0]), -1)
+		let point_behind = this.firstPointOnDiagonal(newpos, -1)
 		if (!point_behind)
 			this.lastInserted.push({ 
 						coords : newpos,
@@ -198,8 +196,8 @@ class Environment {
 
 		
 
-		Object.values(blockConfig).forEach(e => {
-			let startPoint = math.add(newpos, math.multiply(-1, e.shift))
+		Object.values(ADJACENTS).forEach(e => {
+			let startPoint = math.add(newpos, math.multiply(-1, e))
 			let firstPoint = this.firstPointOnDiagonal(startPoint, -1)
 			if(firstPoint)
 				this.lastInserted.push({ 
@@ -268,109 +266,55 @@ class Environment {
 
 
 
-		let drawConfig = {
-			top_left : {
-				draw : true,
+		let polygons = [
+			{
 				points: points_top_left,
-				color : top_color
+				color : top_color,
+				blocksToCheck : TOP_LEFT
+
 			},
-			top_right : {
-				draw : true,
+			{
 				points: points_top_right,
-				color : top_color
+				color : top_color,
+				blocksToCheck : TOP_RIGHT
 			},
-			left_top : {
-				draw : true,
+			{
 				points: points_left_top,
-				color : left_color
+				color : left_color,
+				blocksToCheck : LEFT_TOP
 			},
-			left_down : {
-				draw : true,
+			{
 				points: points_left_down,
-				color : left_color
+				color : left_color,
+				blocksToCheck : LEFT_DOWN
 			},
-			right_top : {
-				draw : true,
+			{
 				points: points_right_top,
-				color : right_color
+				color : right_color,
+				blocksToCheck : RIGHT_TOP
 			},
-			right_down : {
-				draw : true,
+			{
 				points: points_right_down,
-				color : right_color
+				color : right_color,
+				blocksToCheck : RIGHT_DOWN
 			}
-		}
+		]
 
 		if (init) {
-			Object.values(drawConfig).filter(e => e.draw).forEach(e => {
-				this.drawing.drawPolygon(e.points, e.color)
-			})
+			polygons.forEach(polygon => this.drawing.drawPolygon(polygon.points, polygon.color))
 			return
 		}
 
-		let blockConfig ={
-			blockOnTop : {
-				found : false,
-				shift : [0,0,1],
-				toRemove : ['top_left', 'top_right']
-			},
+		
 
-			blockOnTopLeft : {
-				found : false,
-				shift : [0,1,1],
-				toRemove : ['top_left', 'left_top']
-			},
-
-			blockOnTopRight : {
-				found : false,
-				shift : [1,0,1],
-				toRemove : ['top_right', 'right_top']
-			},
-
-			blockOnLeft : {
-				found : false,
-				shift : [0,1,0],
-				toRemove : ['left_top', 'left_down']
-			},
-
-			blockOnRight : {
-				found : false,
-				shift : [1,0,0],
-				toRemove : ['right_top', 'right_down']
-			},
-
-			blockInFrontDown : {
-				found : false,
-				shift : [1,1,0],
-				toRemove : ['left_down', 'right_down']
-			},
-
-			blockInFrontUp : {
-				found : false,
-				shift : [1,1,1],
-				toRemove : ['top_left', 'top_right', 'left_top', 'left_down', 'right_top', 'right_down']
-			}
-		}
-
-		Object.values(blockConfig).filter(e =>!e.found).forEach(e => {
-			if(this.firstPointOnDiagonal(math.add(e.shift, coords), 1))
-				e.found = true
+		polygons.forEach(polygon => {
+			if(!any(polygon.blocksToCheck, e => this.firstPointOnDiagonal(math.add(e, coords), 1)))
+				this.drawing.drawPolygon(polygon.points, polygon.color)
 		})
-
-		Object.values(blockConfig).filter(e => e.found).forEach( e => {
-			e.toRemove.forEach(pos => {
-				drawConfig[pos].draw = false
-			})
-				
-		})
-
-		Object.values(drawConfig).filter(e => e.draw).forEach(e => {
-			this.drawing.drawPolygon(e.points, e.color)
-		})
-
-
 
 	}
+
+
 	drawChanges() {
 		Object.values(this.lastInserted).forEach(e => {
 			this.drawBlock(e.coords, { top: e.top,
