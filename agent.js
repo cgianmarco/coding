@@ -216,6 +216,13 @@ class Environment {
 
 		let top_color = Drawing.scaleColorHeight(colors.top, z)
 		let [left_color, right_color] = Drawing.scaleColorSide(colors.side)
+
+		if((arraysEqual(colors.top, [255,255,255]) && arraysEqual(colors.side, [255,255,255]))){
+			let white = Drawing.rgb(255,255,255)
+			top_color = white
+			right_color = white
+			left_color = white
+		}
 		
 
 		let posx = width / 2 + (x - y) * tileWidth / 2;
