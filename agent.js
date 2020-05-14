@@ -305,13 +305,13 @@ class Environment {
 			blockOnTopLeft : {
 				found : false,
 				shift : [0,1,1],
-				toRemove : ['top_left']
+				toRemove : ['top_left', 'left_top']
 			},
 
 			blockOnTopRight : {
 				found : false,
 				shift : [1,0,1],
-				toRemove : ['top_right']
+				toRemove : ['top_right', 'right_top']
 			},
 
 			blockOnLeft : {
@@ -354,6 +354,7 @@ class Environment {
 		Object.values(drawConfig).filter(e => e.draw).forEach(e => {
 			Drawing.drawPolygon(e.points, e.color)
 		})
+
 
 
 	}
