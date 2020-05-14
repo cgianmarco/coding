@@ -1,0 +1,16 @@
+.side-editor {
+    height: auto;
+}
+.CodeMirror {
+    line-height: 1.2em;
+    max-height: 28em;
+}
+.code-editor-scripts-carousel button {
+    filter: opacity(0.7)
+}
+.code-editor-scripts-carousel button:hover {
+    filter: opacity(1)
+}
+.code-editor-scripts-carousel .script {
+    font-family: 'Courier New', Courier, monospace;
+}
