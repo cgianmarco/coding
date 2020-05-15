@@ -33,7 +33,7 @@ function partition(spacing, input){
 class ActionButton extends Component {
     constructor(props) {
         super(props)
-        ref = createRef();
+        this.ref = createRef();
     }
     componentDidMount(){
         this.tippy = tooltip({

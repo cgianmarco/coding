@@ -55,8 +55,11 @@ for(let p = 0; p < 3; p++){
         let env = new Environment(this.canvas.current);
         this.updateState({env: env, agent: new Agent(env)})
     }
+    updateState(update) {
+        this.setState(state => Object.assign(state, update))
+    }
     pause() {
-        this.setState({running: false})
+        this.updateState({running: false})
     }
     stepFW() {
         this.executeCode()
@@ -66,45 +69,41 @@ for(let p = 0; p < 3; p++){
         let env = new Environment(this.canvas.current)
         let agent = new Agent(env)
         this.updateState({env, agent})
-        //this.frame();
     }
     runCode() {
         if (this.state.running) {
             return;
         }
         this.executeCode()
-        this.updateState({running: true})
-        setTimeout(this.play.bind(this), 0);
-    }
-    play() {
-        if (this.state.running) {
-            this.frame(this.play.bind(this))
-        } 
-    }
-    updateState(update) {
-        this.setState(state => Object.assign(state, update))
-    }
-    frame(callback) {
-        if (this.state.agent.processNextCommand()) {
-            //this.updateState({})
-        } else {
-            this.updateState({running: false})
-        }
-        window.requestAnimationFrame(() => {
-            this.state.env.drawChanges();
-            callback && callback();
-        })
-        
+        this.updateState({running: this.state.agent.commands.length})
+        this.play();
     }
     executeCode() {
         if (this.state.agent.commands.length == 0) {
             let globalVars = Object.keys(Directions)
                 .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
             let ctx = {};
-            console.log('eseguo', `"use strict"; \n${globalVars} \nthis.script = function(agent) { ${this.state.code}\n }`)
             new Function(`"use strict"; ${globalVars} this.script = function(agent) { ${this.state.code}\n }`)
                 .apply(ctx) 
             ctx.script.apply(null, [this.state.agent])
+        }
+    }
+    play() {
+        function loop() {
+            if (this.state.running) {
+                this.frame(loop.bind(this))
+            }
+        }
+        setTimeout(loop.bind(this), 0)
+    }
+    frame(callback = () => {}) {
+        if (this.state.agent.processNextCommand()) {
+            window.requestAnimationFrame(() => {
+                this.state.env.drawChanges();
+                setTimeout(callback, 0)
+            })
+        } else {
+            this.updateState({running: false})
         }
     }
     codeUpdated(code) {
