@@ -6,6 +6,34 @@ const math = {
 }
 const TOP_DEFAULT = [172,214,86]
 const SIDE_DEFAULT = [135, 57, 81]
+const WHITE = [255, 255, 255]
+
+const AGENT_FRONT_COLOR = [140, 50, 60]
+const AGENT_BACK_COLOR = [50, 60, 140]
+const AGENT_GENERAL_COLOR = [0, 0, 0]
+
+var AGENT_CONFIGS = {}
+AGENT_CONFIGS[[1, 0, 0]] = {
+		top : AGENT_GENERAL_COLOR,
+		left : AGENT_GENERAL_COLOR,
+		right : AGENT_FRONT_COLOR
+	}
+AGENT_CONFIGS[[-1, 0, 0]] =  {
+		top : AGENT_GENERAL_COLOR,
+		left : AGENT_GENERAL_COLOR,
+		right : AGENT_BACK_COLOR
+	},
+AGENT_CONFIGS[[0, 1, 0]] = {
+		top : AGENT_GENERAL_COLOR,
+		left : AGENT_FRONT_COLOR,
+		right : AGENT_GENERAL_COLOR
+	}
+AGENT_CONFIGS[[0, -1, 0]] = {
+		top : AGENT_GENERAL_COLOR,
+		left : AGENT_BACK_COLOR,
+		right : AGENT_GENERAL_COLOR
+	}
+
 
 const FORWARD = 0
 const BACK = 1
@@ -136,29 +164,14 @@ class Environment {
 
 		for(let i = -20; i < 20; i++)
 			for(let j = -20; j < 20; j++) {
-				this.conf[[i, j, 0]] = { 
-					top : TOP_DEFAULT,
-					side : SIDE_DEFAULT
-				}
 
-				this.drawBlock([i, j, 0], {top: TOP_DEFAULT, side: SIDE_DEFAULT}, true)
-				// this.lastInserted.push({ 
-				// 	coords : [i, j, 0],
-				// 	top : TOP_DEFAULT,
-				// 	side : SIDE_DEFAULT
-				// })
-				// this.conf[[i, j, -1]] = { 
-				// 	top : [255,255,255],
-				// 	side : [255,255,255]
-				// }
+				let newpos = [i, j, 0]
+				let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
 
-				// this.lastInserted.push({ 
-				// 	coords : [i, j, 0],
-				// 	top : TOP_DEFAULT,
-				// 	side : SIDE_DEFAULT
-				// })
+				this.conf[newpos] = block
+				this.drawBlock(newpos, block, true)
+
 			}
-
 			
 	}
 
@@ -168,14 +181,13 @@ class Environment {
 		return this.conf[coord]
 	}
 
-	place(newpos, colors){
+	place(newpos, block){
 		if(!this.isInConf(newpos)){
-			this.conf[newpos] = colors
+			this.conf[newpos] = block
 			// this.conf.sort(howToSort)
 			this.lastInserted.push({
 				coords: newpos,
-				top : colors.top,
-				side : colors.side
+				block : block
 			})
 		}
 	}
@@ -187,12 +199,14 @@ class Environment {
 		delete this.conf[newpos]
 
 		let point_behind = this.firstPointOnDiagonal(newpos, -1)
-		if (!point_behind)
+		if (!point_behind){
+
+			let white = Block.WhiteBlock()
 			this.lastInserted.push({ 
 						coords : newpos,
-						top : [255,255,255],
-						side : [255,255,255]
+						block : white
 					})
+		}
 
 		
 
@@ -202,8 +216,7 @@ class Environment {
 			if(firstPoint)
 				this.lastInserted.push({ 
 					coords : firstPoint,
-					top : this.conf[firstPoint].top,
-					side : this.conf[firstPoint].side
+					block : this.conf[firstPoint]
 				})
 		})
 
@@ -211,7 +224,7 @@ class Environment {
 
 	// direction 1 for forward diagonal, -1 for back diagonal
 	firstPointOnDiagonal(start, direction){
-		for(let k = 0; k < 100; k++){
+		for(let k = 0; k < 50; k++){
 			let point = math.add(start, math.multiply(direction, [k,k,k]))
 			if(this.isInConf(point))
 				return point
@@ -221,19 +234,13 @@ class Environment {
 
 
 
-	drawBlock(coords, colors, init){
+	drawBlock(coords, block, init){
 
 		let [x, y, z] = coords
 
-		let top_color = Drawing.scaleColorHeight(colors.top, z)
-		let [left_color, right_color] = Drawing.scaleColorSide(colors.side)
-
-		if((arraysEqual(colors.top, [255,255,255]) && arraysEqual(colors.side, [255,255,255]))){
-			let white = Drawing.rgb(255,255,255)
-			top_color = white
-			right_color = white
-			left_color = white
-		}
+		let top_color = Drawing.rgb(...block.top)
+		let left_color = Drawing.rgb(...block.left)
+		let right_color = Drawing.rgb(...block.right)
 		
 
 		let posx = this.drawing.width / 2 + (x - y) * tileWidth / 2;
@@ -315,17 +322,48 @@ class Environment {
 	}
 
 
+	shift(oldpos, newpos){
+		let block = this.conf[oldpos]
+		this.destroy(oldpos)
+		this.place(newpos, block)
+
+	}
+
+
 	drawChanges() {
 		Object.values(this.lastInserted).forEach(e => {
-			this.drawBlock(e.coords, { top: e.top,
-										side: e.side
-									})
+			// console.log(e.block)
+			this.drawBlock(e.coords, e.block)
 		})
 		this.lastInserted = []
 	}
 
 }
 
+
+class Block{
+	static TerrainBlock(coords, top, side){
+		let z = coords[2]
+		let scaledTop = Drawing.scaleColorHeight(top, z)
+		let lightSide = Drawing.scaleColorSide(side)
+		return new Block(scaledTop, side, lightSide)
+	}
+
+	static AgentBlock(direction){
+		let colors = AGENT_CONFIGS[direction]
+		return new Block(colors.top, colors.left, colors.right)
+	}
+
+	static WhiteBlock(){
+		return new Block(WHITE, WHITE, WHITE)
+	}
+
+	constructor(top, left, right){
+		this.top = top
+		this.left = left
+		this.right = right
+	}
+}
 
 
 class Agent {
@@ -334,11 +372,20 @@ class Agent {
 		this.env = env
 		this.position = [0,0,1]
 		this.direction = [0, -1, 0]
-		this.colors = { 
+		this.block_colors = { 
 			top : TOP_DEFAULT,
 			side : SIDE_DEFAULT
 		}
+
+		if(!this.env.isInConf(this.position)){
+			let block = Block.AgentBlock(this.direction)
+			this.env.conf[this.position] = block
+			this.env.drawBlock(this.position, block)
+		}
+		
 	}
+
+
 	move(direction, steps=1) {
 		for(let i = 0; i < steps; i++)
 	   		this.commands.push([MOVE, direction])
@@ -363,17 +410,21 @@ class Agent {
 		if(command == MOVE){
 			let absolute = this.getAbsoluteDirection(this.direction, relative)
 			let newpos = math.add(this.position, absolute)
-			if(!this.env.isInConf(newpos))
+			if(!this.env.isInConf(newpos)){
+				this.env.shift(this.position, newpos)
 				this.position = newpos
+			}
 		}
 		if(command == TURN){
+			this.env.destroy(this.position)
 			this.direction = this.getAbsoluteDirection(this.direction, relative)
+			this.env.place(this.position, Block.AgentBlock(this.direction))
 		}
 
 		if(command == PLACE){
 			let absolute = this.getAbsoluteDirection(this.direction, relative)
 			let newpos = math.add(this.position, absolute)
-			this.env.place(newpos, this.colors)
+			this.env.place(newpos, Block.TerrainBlock(newpos, this.block_colors.top, this.block_colors.side))
 		}
 
 		if(command == DESTROY){
@@ -383,7 +434,7 @@ class Agent {
 		}
 
 		if(command == SET_COLOR)
-			this.colors = relative
+			this.block_colors = relative
 	}
 
 	processNextCommand() {

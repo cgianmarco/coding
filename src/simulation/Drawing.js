@@ -75,10 +75,10 @@ class Drawing {
 	static scaleColorHeight(color, z){
 		let max_z = parseInt(Math.min(...color) / 10)
 		let dark = [color[0]-max_z*10, color[1]-max_z*10, color[2]-max_z*10]
-		let TOP = Drawing.rgb(...dark)
+		let TOP = dark
 
 		if (z <= max_z)
-			TOP = Drawing.rgb(color[0]-z*10, color[1]-z*10, color[2]-z*10)
+			TOP = [color[0]-z*10, color[1]-z*10, color[2]-z*10]
 
 		return TOP
 	}
@@ -90,7 +90,7 @@ class Drawing {
 		else
 			hsv[0] = hsv[0] + SHADING_H
 		hsv[2] = Math.min(hsv[2] + SHADING_V, 1)
-		return [Drawing.rgb(...color), Drawing.rgb(...Drawing.HSVtoRGB(...hsv))]
+		return Drawing.HSVtoRGB(...hsv)
 
 
 	}
