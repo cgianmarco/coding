@@ -3,12 +3,75 @@
 // 			width = canvas.width = canvas.offsetWidth,
 // 			height = canvas.height = canvas.offsetHeight
 
+const tileWidth = 24;
+const tileHeight = tileWidth / 2;
+
+function getPolygons(z, posx, posy) {
+    let points_top = [[posx, posy - z * tileHeight],
+    [posx + tileWidth / 2, posy + tileHeight / 2 - z * tileHeight],
+    [posx, posy + tileHeight - z * tileHeight],
+    [posx - tileWidth / 2, posy + tileHeight / 2 - z * tileHeight]];
+
+    let points_left = [[posx - tileWidth / 2, posy + tileHeight / 2 - z * tileHeight],
+    [posx, posy + tileHeight - z * tileHeight],
+    [posx, posy + tileHeight - (z - 1) * tileHeight],
+    [posx - tileWidth / 2, posy + tileHeight / 2 - (z - 1) * tileHeight]];
+
+    let points_right = [[posx + tileWidth / 2, posy + tileHeight / 2 - z * tileHeight],
+    [posx, posy + tileHeight - z * tileHeight],
+    [posx, posy + tileHeight - (z - 1) * tileHeight],
+    [posx + tileWidth / 2, posy + tileHeight / 2 - (z - 1) * tileHeight]];
+
+   	return [points_top, points_left, points_right]
+
+}
+
+
+
+function initializeCanvas(canvas, colors){
+	let ctx = canvas.getContext('2d')
+	ctx.width = tileWidth
+	ctx.height = 2 * tileHeight
+
+	let polygons = getPolygons(0, tileWidth/2, 0)
+
+	polygons.forEach((points, i) =>{
+		ctx.beginPath()
+	    ctx.moveTo(points[0][0], points[0][1])
+
+	    for (let i = 1; i < points.length; i++){
+	      ctx.lineTo(points[i][0], points[i][1])
+	    }
+	    ctx.closePath()
+
+	    ctx.fillStyle = colors[i];
+	    ctx.fill();
+	})
+	
+}
+
+
+function createCube(colors){
+	console.log('createcube')
+  	let canvas = document.createElement('canvas')
+  	initializeCanvas(canvas, colors)
+
+  	return function(ctx, x, y){
+
+  		ctx.drawImage(canvas, x, y)
+
+  	}
+  	
+ }
+
 const COLOR_CACHE = {
   height: {},
   side: {}
 }
 class Drawing {
   constructor(canvas) {
+
+  	this.cubeCache = {}
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
     this.width = canvas.width = canvas.offsetWidth,
@@ -16,6 +79,27 @@ class Drawing {
   }
   clean() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+
+  getCube(top_color, left_color, right_color){
+  	let cubeID = [top_color, left_color, right_color]
+  	let cube = this.cubeCache[cubeID]
+
+  	if(!cube){
+  		cube = createCube(cubeID)
+  		this.cubeCache[cubeID] = cube
+  	}
+
+  	return cube
+
+  }
+
+  drawCube(x, y, top_color, left_color, right_color){
+
+  	let cube = this.getCube(top_color, left_color, right_color)
+  	cube(this.context, x, y)
+
   }
 
   drawPolygon(points, color) {

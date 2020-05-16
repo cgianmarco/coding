@@ -152,22 +152,27 @@ class Environment {
 
     let [x, y, z] = block.coords
 
+    x = x - z
+    y = y - z
+
     let top_color = Drawing.rgb(...block.top)
     let left_color = Drawing.rgb(...block.left)
     let right_color = Drawing.rgb(...block.right)
 
 
-    let posx = this.drawing.width / 2 + (x - y) * tileWidth / 2;
+    let posx = this.drawing.width / 2 + (x - y) * tileWidth / 2 - tileWidth/2;
     let posy = this.drawing.height / 2 + 50 + (x + y) * tileHeight / 2;
 
+    let cube = this.drawing.drawCube(posx, posy, top_color, left_color, right_color)
 
-    let polygons = Environment.getPolygons(z, posx, posy, top_color, left_color, right_color)
 
-    //polygons.forEach(polygon => this.drawing.drawPolygon(polygon.points, polygon.color))
-    for (var i = 0; i < polygons.length; i++) {
-      let polygon = polygons[i]
-      this.drawing.drawPolygon(polygon.points, polygon.color)
-    }
+    // let polygons = Environment.getPolygons(z, posx, posy, top_color, left_color, right_color)
+
+    // //polygons.forEach(polygon => this.drawing.drawPolygon(polygon.points, polygon.color))
+    // for (var i = 0; i < polygons.length; i++) {
+    //   let polygon = polygons[i]
+    //   this.drawing.drawPolygon(polygon.points, polygon.color)
+    // }
 
   }
 
