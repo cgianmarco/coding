@@ -323,7 +323,7 @@ class Environment {
 
 
 	shift(oldpos, newpos){
-		let block = this.conf[oldpos]
+		let block = this.isInConf(oldpos)
 		this.destroy(oldpos)
 		this.place(newpos, block)
 
@@ -379,8 +379,7 @@ class Agent {
 
 		if(!this.env.isInConf(this.position)){
 			let block = Block.AgentBlock(this.direction)
-			this.env.conf[this.position] = block
-			this.env.drawBlock(this.position, block)
+			this.env.place(this.position, block)
 		}
 		
 	}
@@ -471,5 +470,6 @@ class Agent {
 export {
     Environment,
 	Agent,
-	Directions
+	Directions,
+	Block
 }

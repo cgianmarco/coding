@@ -4,7 +4,8 @@ import CodeEditor from './components/CodeEditor.js'
 import Icon from './components/Icon.js'
 import EditorActions from './components/EditorActions.js'
 import Accordion from './components/Accordion.js'
-import {Environment, Agent, Directions} from './simulation/Environment.js'
+import {Agent, Directions} from './simulation/Environment.js'
+import {Environment} from './simulation/Environment2.js'
 
 // Initialize htm with Preact
 const html = htm.bind(h);
