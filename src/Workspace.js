@@ -101,7 +101,7 @@ for(let p = 0; p < 3; p++){
         if (this.state.agent.processNextCommand()) {
             window.requestAnimationFrame(() => {
                 this.state.env.drawChanges();
-                setTimeout(callback, 0)
+                setImmediate(callback)
             })
         } else {
             this.updateState({running: false})
@@ -134,6 +134,7 @@ for(let p = 0; p < 3; p++){
                 `
             }
         ]
+        console.log('render workspace')
         return html`
             <div class="row">
                 <div class="col-4 side-editor p-0">
