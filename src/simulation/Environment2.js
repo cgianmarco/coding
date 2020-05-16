@@ -6,7 +6,7 @@ import Drawing from "./Drawing.js"
 const TOP_DEFAULT = [172, 214, 86]
 const SIDE_DEFAULT = [135, 57, 81]
 
-const tileWidth = 22;
+const tileWidth = 24;
 const tileHeight = tileWidth / 2;
 
 
