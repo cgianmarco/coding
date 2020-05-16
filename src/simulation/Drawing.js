@@ -1,9 +1,5 @@
-// var canvas = document.getElementById('canvas'),
-// 			context = canvas.getContext('2d'),
-// 			width = canvas.width = canvas.offsetWidth,
-// 			height = canvas.height = canvas.offsetHeight
 
-const tileWidth = 24;
+const tileWidth = 20;
 const tileHeight = tileWidth / 2;
 
 function getPolygons(z, posx, posy) {
@@ -46,13 +42,16 @@ function initializeCanvas(canvas, colors){
 
 	    ctx.fillStyle = colors[i];
 	    ctx.fill();
+
+	    ctx.strokeStyle = Drawing.rgb(90,90,90)
+	    ctx.lineWidth = 0.5
+	    ctx.stroke();
 	})
 	
 }
 
 
 function createCube(colors){
-	console.log('createcube')
   	let canvas = document.createElement('canvas')
   	initializeCanvas(canvas, colors)
 
@@ -68,9 +67,9 @@ const COLOR_CACHE = {
   height: {},
   side: {}
 }
+
 class Drawing {
   constructor(canvas) {
-
   	this.cubeCache = {}
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
@@ -97,23 +96,12 @@ class Drawing {
 
   drawCube(x, y, top_color, left_color, right_color){
 
+  	let posx = this.width / 2 + (x - y) * tileWidth / 2 - tileWidth/2;
+    let posy = this.height / 2 + 50 + (x + y) * tileHeight / 2;
+
   	let cube = this.getCube(top_color, left_color, right_color)
-  	cube(this.context, x, y)
+  	cube(this.context, posx, posy)
 
-  }
-
-  drawPolygon(points, color) {
-    //this.context.strokeStyle = Drawing.rgb(0, 0, 0);
-    this.context.beginPath()
-    this.context.moveTo(points[0][0], points[0][1])
-
-    for (let i = 1; i < points.length; i++)
-      this.context.lineTo(points[i][0], points[i][1])
-    this.context.closePath()
-
-    this.context.fillStyle = color;
-    this.context.fill();
-    // context.stroke()
   }
 
   static rgb(r, g, b) {
@@ -166,7 +154,7 @@ class Drawing {
     if (entry) {
       return entry;
     }
-    let max_z = parseInt(Math.min(...color) / 10)
+    let max_z = parseInt(Math.min(...color) / 10) - 2 
     let dark = [color[0] - max_z * 10, color[1] - max_z * 10, color[2] - max_z * 10]
     let TOP = dark
 

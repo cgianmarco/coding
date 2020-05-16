@@ -4,9 +4,15 @@ import Drawing from './Drawing.js'
 const math = {
     add, matrix, multiply
 }
-const TOP_DEFAULT = [172,214,86]
+
+// const TOP_DEFAULT = [172, 214, 86]
 const SIDE_DEFAULT = [135, 57, 81]
-const WHITE = [255, 255, 255]
+const TOP_DEFAULT = [60, 160, 120]
+
+const tileWidth = 20;
+const tileHeight = tileWidth / 2;
+
+
 
 const AGENT_FRONT_COLOR = [140, 50, 60]
 const AGENT_BACK_COLOR = [50, 60, 140]
@@ -59,25 +65,44 @@ const RIGHT_ROT = math.matrix([[0, -1, 0],
 
 
 
-const ADJACENTS = {
-	top : [0,0,1],
-	topLeft : [0,1,1],
-	topRight : [1,0,1],
-	left : [0,1,0],
-	right : [1,0,0],
-	frontDown : [1,1,0],
-	frontUp : [1,1,1],
+// const ADJACENTS = {
+// 	top : [0,0,1],
+// 	topLeft : [0,1,1],
+// 	topRight : [1,0,1],
+// 	left : [0,1,0],
+// 	right : [1,0,0],
+// 	frontDown : [1,1,0],
+// 	frontUp : [1,1,1],
+// }
+
+
+// const TOP_LEFT = [ ADJACENTS['top'], ADJACENTS['topLeft'], ADJACENTS['frontUp'] ]
+// const TOP_RIGHT = [ ADJACENTS['top'], ADJACENTS['topRight'], ADJACENTS['frontUp'] ]
+// const LEFT_TOP = [ ADJACENTS['topLeft'], ADJACENTS['left'], ADJACENTS['frontUp'] ]
+// const LEFT_DOWN = [ ADJACENTS['left'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
+// const RIGHT_TOP = [ ADJACENTS['topRight'], ADJACENTS['right'], ADJACENTS['frontUp'] ]
+// const RIGHT_DOWN = [ ADJACENTS['right'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
+
+
+
+
+function sortBlocks(b1, b2) {
+
+  let diff = b1.coords[2] - b2.coords[2]
+
+  if (diff == 0)
+    return b1.coords[0] + b1.coords[1] - b2.coords[0] - b2.coords[1]
+
+  else
+    return diff
+
 }
 
+function getMaxZ(blocks) {
 
-const TOP_LEFT = [ ADJACENTS['top'], ADJACENTS['topLeft'], ADJACENTS['frontUp'] ]
-const TOP_RIGHT = [ ADJACENTS['top'], ADJACENTS['topRight'], ADJACENTS['frontUp'] ]
-const LEFT_TOP = [ ADJACENTS['topLeft'], ADJACENTS['left'], ADJACENTS['frontUp'] ]
-const LEFT_DOWN = [ ADJACENTS['left'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
-const RIGHT_TOP = [ ADJACENTS['topRight'], ADJACENTS['right'], ADJACENTS['frontUp'] ]
-const RIGHT_DOWN = [ ADJACENTS['right'], ADJACENTS['frontDown'], ADJACENTS['frontUp'] ]
+  return blocks[0]
 
-
+}
 
 
 function arraysEqual(a, b) {
@@ -105,42 +130,6 @@ function any(arr, condition){
 }
 
 
-/*
-function binarySearch(arr, x, map){
-
-return arr.findIndex(elem => arraysEqual(elem, x))
-
-// var mapped = map(x)
-
-// let recursiveFunction = function (arr, x, func, start, end) {
-   
-//     // Base Condition 
-//     if (start > end) return -1; 
-   
-//     // Find the middle index 
-//     let mid=Math.floor((start + end)/2); 
-   
-//     // Compare mid with given key x 
-//     if (arraysEqual(arr[mid],x)) return mid; 
-          
-//     // If element at mid is greater than x, 
-//     // search in the left half of mid 
-//     if(mid < arr.length)
-// 	    if(func(arr[mid]) > mapped)  
-// 	        return recursiveFunction(arr, x, func, start, mid-1); 
-// 	    else
-// 	        // If element at mid is smaller than x, 
-// 	        // search in the right half of mid 
-// 	        return recursiveFunction(arr, x, func, mid+1, end); 
-// }
-
-
-
-// return recursiveFunction(arr, x, map, 0, arr.length)
-}
-*/
-
-
 function howToSort(block1, block2){
 	return block1[0] + block1[1] + block1[2] - block2[0] - block2[1] - block2[2]
 }
@@ -150,194 +139,119 @@ function distance(coord){
 	return coord[0] + coord[1] + coord[2]
 }
 
-const tileWidth = 22;
-const tileHeight = tileWidth / 2;
 
 class Environment {
+  constructor(canvas) {
+    this.drawing = new Drawing(canvas);
 
-	constructor(canvas){
-		this.lastInserted = []
-		this.drawing = new Drawing(canvas);
+    this.conf = {}
 
-		this.conf = {}
-		this.drawing.clean()
+    for (let i = -20; i < 20; i++)
+      for (let j = -20; j < 20; j++) {
 
-		for(let i = -20; i < 20; i++)
-			for(let j = -20; j < 20; j++) {
+        let newpos = [i, j, 0]
+        let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
 
-				let newpos = [i, j, 0]
-				let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
+        this.place(newpos, block)
 
-				this.conf[newpos] = block
-				this.drawBlock(newpos, block, true)
+      }
 
-			}
-			
-	}
+  }
 
 
-	isInConf(coord){
-		// return binarySearch(this.conf, coord, distance) > -1
-		return this.conf[coord]
-	}
+  isInConf(coords) {
+    let [x, y, z] = coords
+    let i = x - z
+    let j = y - z
 
-	place(newpos, block){
-		if(!this.isInConf(newpos)){
-			this.conf[newpos] = block
-			// this.conf.sort(howToSort)
-			this.lastInserted.push({
-				coords: newpos,
-				block : block
-			})
-		}
-	}
+    let diag = this.conf[[i, j]]
 
-		
-	
+    if (diag) {
+      return diag.find(e => z == e.coords[2])
+    }
 
-	destroy(newpos){
-		delete this.conf[newpos]
+    return null
+  }
 
-		let point_behind = this.firstPointOnDiagonal(newpos, -1)
-		if (!point_behind){
 
-			let white = Block.WhiteBlock()
-			this.lastInserted.push({ 
-						coords : newpos,
-						block : white
-					})
-		}
+  place(coords, block) {
 
-		
+    // console.log(coords)
 
-		Object.values(ADJACENTS).forEach(e => {
-			let startPoint = math.add(newpos, math.multiply(-1, e))
-			let firstPoint = this.firstPointOnDiagonal(startPoint, -1)
-			if(firstPoint)
-				this.lastInserted.push({ 
-					coords : firstPoint,
-					block : this.conf[firstPoint]
-				})
-		})
+    let [x, y, z] = coords
+    let i = x - z
+    let j = y - z
 
-	}
+    block.coords = coords
 
-	// direction 1 for forward diagonal, -1 for back diagonal
-	firstPointOnDiagonal(start, direction){
-		for(let k = 0; k < 50; k++){
-			let point = math.add(start, math.multiply(direction, [k,k,k]))
-			if(this.isInConf(point))
-				return point
-		}
-		return null
-	}
+    let diag = this.conf[[i, j]]
+    if (!diag || diag.length == 0)
+      this.conf[[i, j]] = [block]
+    else {
+      if (z > diag[0].coords[2])
+        diag.unshift(block)
+      else
+        diag.push(block)
+    }
 
 
 
-	drawBlock(coords, block, init){
+  }
 
-		let [x, y, z] = coords
+  destroy(coords) {
 
-		let top_color = Drawing.rgb(...block.top)
-		let left_color = Drawing.rgb(...block.left)
-		let right_color = Drawing.rgb(...block.right)
-		
+    let [x, y, z] = coords
+    let i = x - z
+    let j = y - z
 
-		let posx = this.drawing.width / 2 + (x - y) * tileWidth / 2;
-		let posy = this.drawing.height / 2 + 50 + (x + y) * tileHeight / 2;
-
-
-		let points_top = [[posx, posy - z * tileHeight], 
-		  			  [posx + tileWidth/2, posy + tileHeight/2 - z * tileHeight],
-		  			  [posx, posy + tileHeight - z * tileHeight],
-		  			  [posx - tileWidth/2, posy + tileHeight/2 - z * tileHeight]];
-
-		let points_left = [[posx - tileWidth/2, posy + tileHeight/2 - z * tileHeight],
-					   [posx, posy + tileHeight - z * tileHeight],
-				  	   [posx, posy + tileHeight - (z-1) * tileHeight],
-				  	   [posx - tileWidth/2, posy + tileHeight/2 - (z-1) * tileHeight]];
-
-		let points_right = [[posx + tileWidth/2, posy + tileHeight/2 - z * tileHeight],
-					    [posx, posy + tileHeight - z * tileHeight],
-				  	    [posx, posy + tileHeight - (z-1) * tileHeight],
-				  	    [posx + tileWidth/2, posy + tileHeight/2 - (z-1) * tileHeight]];
-
-		let points_top_left = [points_top[0], points_top[2], points_top[3]]
-		let points_top_right = [points_top[0], points_top[1], points_top[2]]
-
-		let points_left_top = [points_left[0], points_left[1], points_left[3]]
-		let points_left_down = [points_left[1], points_left[2], points_left[3]]
-
-		let points_right_top = [points_right[0], points_right[1], points_right[3]]
-		let points_right_down = [points_right[1], points_right[2], points_right[3]]
+    let diag = this.conf[[i, j]]
+    if (diag) {
+      diag.splice(diag.findIndex(e => z == e.coords[2]), 1)
+      if (diag.length == 0)
+        delete this.conf[[i, j]]
+    }
 
 
 
-		let polygons = [
-			{
-				points: points_top_left,
-				color : top_color,
-				blocksToCheck : TOP_LEFT
-
-			},
-			{
-				points: points_top_right,
-				color : top_color,
-				blocksToCheck : TOP_RIGHT
-			},
-			{
-				points: points_left_top,
-				color : left_color,
-				blocksToCheck : LEFT_TOP
-			},
-			{
-				points: points_left_down,
-				color : left_color,
-				blocksToCheck : LEFT_DOWN
-			},
-			{
-				points: points_right_top,
-				color : right_color,
-				blocksToCheck : RIGHT_TOP
-			},
-			{
-				points: points_right_down,
-				color : right_color,
-				blocksToCheck : RIGHT_DOWN
-			}
-		]
-
-		if (init) {
-			polygons.forEach(polygon => this.drawing.drawPolygon(polygon.points, polygon.color))
-			return
-		}
-
-		
-
-		polygons.forEach(polygon => {
-			if(!any(polygon.blocksToCheck, e => this.firstPointOnDiagonal(math.add(e, coords), 1)))
-				this.drawing.drawPolygon(polygon.points, polygon.color)
-		})
-
-	}
+  }
 
 
-	shift(oldpos, newpos){
-		let block = this.isInConf(oldpos)
-		this.destroy(oldpos)
-		this.place(newpos, block)
+  shift(oldpos, newpos) {
+    let block = this.isInConf(oldpos)
 
-	}
+    if (block) {
+      this.destroy(oldpos)
+      this.place(newpos, block)
+    }
+
+  }
 
 
-	drawChanges() {
-		Object.values(this.lastInserted).forEach(e => {
-			// console.log(e.block)
-			this.drawBlock(e.coords, e.block)
-		})
-		this.lastInserted = []
-	}
 
+
+  drawBlock(block) {
+
+    let [x, y, z] = block.coords
+
+    x = x - z
+    y = y - z
+
+    let top_color = Drawing.rgb(...block.top)
+    let left_color = Drawing.rgb(...block.left)
+    let right_color = Drawing.rgb(...block.right)
+
+    let cube = this.drawing.drawCube(x, y, top_color, left_color, right_color)
+
+  }
+
+  drawChanges() {
+    this.drawing.clean()
+    Object.values(this.conf)
+      .map(getMaxZ)
+      .sort(sortBlocks)
+      .forEach(this.drawBlock.bind(this))
+
+  }
 }
 
 
@@ -346,7 +260,7 @@ class Block{
 		let z = coords[2]
 		let scaledTop = Drawing.scaleColorHeight(top, z)
 		let lightSide = Drawing.scaleColorSide(side)
-		return new Block(scaledTop, side, lightSide)
+		return new Block(scaledTop, lightSide, side)
 	}
 
 	static AgentBlock(direction){

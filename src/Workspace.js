@@ -4,8 +4,7 @@ import CodeEditor from './components/CodeEditor.js'
 import Icon from './components/Icon.js'
 import EditorActions from './components/EditorActions.js'
 import Accordion from './components/Accordion.js'
-import {Agent, Directions} from './simulation/Environment.js'
-import {Environment} from './simulation/Environment2.js'
+import {Environment, Agent, Directions} from './simulation/Environment.js'
 
 // Initialize htm with Preact
 const html = htm.bind(h);
@@ -55,6 +54,7 @@ for(let p = 0; p < 3; p++){
     componentDidMount() {
         let env = new Environment(this.canvas.current);
         this.updateState({env: env, agent: new Agent(env)})
+        env.drawChanges()
     }
     updateState(update) {
         this.setState(state => Object.assign(state, update))
@@ -70,6 +70,7 @@ for(let p = 0; p < 3; p++){
         let env = new Environment(this.canvas.current)
         let agent = new Agent(env)
         this.updateState({env, agent})
+        env.drawChanges()
     }
     runCode() {
         if (this.state.running) {

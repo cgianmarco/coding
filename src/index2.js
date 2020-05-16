@@ -1,5 +1,4 @@
-import { Environment } from './simulation/Environment2.js'
-import { Agent, Directions } from './simulation/Environment.js'
+import { Environment, Agent, Directions } from './simulation/Environment.js'
 
  
 var canvas = document.createElement('canvas');
