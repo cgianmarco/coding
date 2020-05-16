@@ -260,7 +260,7 @@ class Block{
 		let z = coords[2]
 		let scaledTop = Drawing.scaleColorHeight(top, z)
 		let lightSide = Drawing.scaleColorSide(side)
-		return new Block(scaledTop, lightSide, side)
+		return new Block(scaledTop, side, lightSide)
 	}
 
 	static AgentBlock(direction){
