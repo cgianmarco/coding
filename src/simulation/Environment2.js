@@ -12,7 +12,13 @@ const tileHeight = tileWidth / 2;
 
 let sortBlocks = function(b1, b2){
 
-  return b1.coords[2] - b2.coords[2]
+  let diff = b1.coords[2] - b2.coords[2]
+
+  if(diff == 0)
+    return b1.coords[0] + b1.coords[1] - b2.coords[0] - b2.coords[1]
+
+  else
+    return diff
 
 }
 
@@ -91,6 +97,8 @@ class Environment{
     let diag = this.conf[[i, j]]
     if(diag){
       diag.splice(diag.findIndex(e => z == e.coords[2]), 1)
+      if(diag.length == 0)
+        delete this.conf[[i, j]]
     }
 
 
