@@ -50,9 +50,6 @@ function EditorActions(props) {
         </button>
     `)
     return html`
-        <div class="row">
-            ${queue}
-        </div>
         <div class="row mt-1">
             ${buttons}
         </div>
