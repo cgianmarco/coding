@@ -54,6 +54,7 @@ const TURN = 'turn'
 const PLACE = 'place'
 const DESTROY = 'destroy'
 const SET_COLOR = 'set_color'
+const ASYNC = 'async'
 
 const LEFT_ROT = math.matrix([[0, 1, 0],
 				   [-1, 0, 0],
@@ -279,7 +280,85 @@ class Block{
 	}
 }
 
-
+const DEFAULT_COLORS = { 
+  top : TOP_DEFAULT,
+  side : SIDE_DEFAULT
+};
+const AgentDescription = {
+  move: {
+    arguments: [
+      {
+        name: 'direction',
+        description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+      }
+    ],
+    example: `agent.move(Directions.FORWARD)`,
+    fn: (agent, env, direction) => {
+      let absolute = agent.getAbsoluteDirection(agent.direction, direction)
+      let newpos = math.add(agent.position, absolute)
+      if(!env.isInConf(newpos)){
+        env.shift(agent.position, newpos)
+        agent.position = newpos
+      }
+      return newpos
+    }
+  },
+  turn: {
+    arguments: [
+      {
+        name: 'direction',
+        description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+      }
+    ],
+    example: 'agent.turn(Directions.RIGHT)',
+    fn: (agent, env, direction) => {
+      env.destroy(agent.position)
+			agent.direction = agent.getAbsoluteDirection(agent.direction, direction)
+      env.place(agent.position, Block.AgentBlock(agent.direction))
+    }
+  },
+  place: {
+    arguments: [
+      {
+        name: 'direction',
+        description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+      },
+      {
+        name: 'color',
+        description: `The colors of the block`
+      }
+    ],
+    example: `
+agent.place(Directions.DOWN)
+agent.place(Directions.UP, {top: [255, 75, 80], side: [255, 250, 230]})
+`,
+    fn: (agent, env, direction, color = DEFAULT_COLORS) => {
+      let absolute = agent.getAbsoluteDirection(agent.direction, direction)
+      let newpos = math.add(agent.position, absolute)
+      env.place(newpos, Block.TerrainBlock(newpos, color.top, color.side))
+    }
+  }
+}
+function ProxyAgent(agent, env){
+  Object.keys(AgentDescription)
+    .forEach(command => {
+      agent[command] = function(...args) {
+        return new Promise(resolve => agent.commands.push([command, resolve, args]))
+      }
+    })
+  function runCmd([cmd, resolve, args]) {
+    resolve(agent[cmd].fn.apply(null, [agent, env, ...args]))
+  }
+  agent.commands = []
+  agent.processNextCommand = () => {
+    let op = agent.commands.shift()
+		if (op) {
+      runCmd.apply(this, op)
+      return op;
+		}
+  }
+  return agent;
+}
 class Agent {
 	constructor(env) {
 	    this.commands = []
@@ -298,7 +377,9 @@ class Agent {
 		
 	}
 
-
+  asyncCommand(count) {
+    return new Promise(resolve => this.commands.push([ASYNC, count, resolve]))
+  }
 	move(direction, steps=1) {
 		for(let i = 0; i < steps; i++)
 	   		this.commands.push([MOVE, direction])
@@ -347,13 +428,18 @@ class Agent {
 		}
 
 		if(command == SET_COLOR)
-			this.block_colors = relative
+      this.block_colors = relative
+      
+    if (command == ASYNC) {
+      let [_, count, resolve] = arguments;
+      resolve(count + 1)
+    }
 	}
 
 	processNextCommand() {
 		let op = this.commands.shift()
 		if (op) {
-			this.run(op[0], op[1])
+			this.run.apply(this, op)
 		}
 		return op;
 	}
