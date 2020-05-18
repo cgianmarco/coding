@@ -43,8 +43,8 @@ function initializeCanvas(canvas, colors){
 	    ctx.fillStyle = colors[i];
 	    ctx.fill();
 
-	    ctx.strokeStyle = Drawing.rgb(90,90,90)
-	    ctx.lineWidth = 0.5
+	    ctx.strokeStyle = Drawing.rgb(40,40,40)
+	    ctx.lineWidth = 0.2
 	    ctx.stroke();
 	})
 	
