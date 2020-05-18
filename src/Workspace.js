@@ -13,6 +13,7 @@ class Workspace extends Component {
 
     constructor(props) {
         super(props)
+        this.perf = []
         this.canvas = createRef();
         this.state = {
             running: false,
@@ -26,13 +27,13 @@ for(let p = 0; p < 3; p++){
             agent.place(DOWN)
             agent.move(FORWARD)
 
-            
+
         }
         agent.turn(LEFT)
 
     }
 }
-        
+
 for(let p = 0; p < 3; p++){
 
     for(let j = 0; j < 4; j++){
@@ -42,13 +43,13 @@ for(let p = 0; p < 3; p++){
             agent.place(DOWN)
             agent.move(BACK)
 
-            
+
         }
         agent.turn(RIGHT)
 
     }
 }
-` 
+`
         };
     }
     componentDidMount() {
@@ -78,6 +79,8 @@ for(let p = 0; p < 3; p++){
         }
         this.executeCode()
         this.updateState({running: this.state.agent.commands.length})
+        this.perf.push(performance.now() )
+        console.log(this.perf)
         this.play();
     }
     executeCode() {
@@ -86,7 +89,7 @@ for(let p = 0; p < 3; p++){
                 .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
             let ctx = {};
             new Function(`"use strict"; ${globalVars} this.script = function(agent) { ${this.state.code}\n }`)
-                .apply(ctx) 
+                .apply(ctx)
             ctx.script.apply(null, [this.state.agent])
         }
     }
@@ -99,13 +102,18 @@ for(let p = 0; p < 3; p++){
         setTimeout(loop.bind(this), 0)
     }
     frame(callback = () => {}) {
+
         if (this.state.agent.processNextCommand()) {
             window.requestAnimationFrame(() => {
                 this.state.env.drawChanges();
                 setImmediate(callback)
             })
+
         } else {
             this.updateState({running: false})
+            this.perf.push(performance.now() )
+            console.log(this.perf)
+            console.log(`Took ${this.perf.pop() - this.perf.pop()} milliseconds.`)
         }
     }
     codeUpdated(code) {
@@ -128,7 +136,7 @@ for(let p = 0; p < 3; p++){
                 title: "Execution",
                 body: html`
                     <div class="container-fluid">
-                        <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
+                        <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)}
                                           onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)}
                                           onReset=${this.reset.bind(this)} />
                     </div>
