@@ -49,12 +49,6 @@ const UP = 4
 const DOWN = 5
 const Directions = {FORWARD, BACK, LEFT, RIGHT, UP, DOWN}
 
-const MOVE = 'move'
-const TURN = 'turn'
-const PLACE = 'place'
-const DESTROY = 'destroy'
-const SET_COLOR = 'set_color'
-
 const LEFT_ROT = math.matrix([[0, 1, 0],
 				   [-1, 0, 0],
 		           [0, 0, 0]])
@@ -279,7 +273,126 @@ class Block{
 	}
 }
 
-
+const DEFAULT_COLORS = { 
+  top : TOP_DEFAULT,
+  side : SIDE_DEFAULT
+};
+const AgentActions = {
+  MOVE: {
+        fn: function (relative){
+          let absolute = this.getAbsoluteDirection(this.direction, relative)
+          let newpos = math.add(this.position, absolute)
+          if(!this.env.isInConf(newpos)){
+            this.env.shift(this.position, newpos)
+            this.position = newpos
+          }
+        },
+        description: 'Move the agent in a direction. It can move for multiple steps.',
+        arguments: [
+          {
+            name: 'direction',
+            description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+          },
+          {
+            name: 'steps',
+            description: 'Number of steps to do'
+          }
+        ],
+        example: `
+agent.move(Directions.FORWARD)
+agent.move(Directions.BACK, 3)
+`,
+      },
+      TURN: {
+        fn: function (relative) {
+          this.env.destroy(this.position)
+          this.direction = this.getAbsoluteDirection(this.direction, relative)
+          this.env.place(this.position, Block.AgentBlock(this.direction))
+        },
+        description: 'Turn the agent in a direction.',
+        arguments: [
+          {
+            name: 'direction',
+            description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+          }
+        ],
+        example: 'agent.turn(Directions.RIGHT)'
+      },
+      PLACE: {
+        fn: function (relative) {
+          let absolute = this.getAbsoluteDirection(this.direction, relative)
+          let newpos = math.add(this.position, absolute)
+          this.env.place(newpos, Block.TerrainBlock(newpos, this.block_colors.top, this.block_colors.side))
+        },
+        description: 'The agent place a block in the passed direction',
+        arguments: [
+          {
+            name: 'direction',
+            description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+          },
+          {
+            name: 'color',
+            description: `The colors of the block`
+          }
+        ],
+        example: `
+agent.place(Directions.DOWN)
+agent.place(Directions.UP, {top: [255, 75, 80], side: [255, 250, 230]})
+`
+      },
+      DESTROY: {
+        fn: function (relative) {
+          let absolute = this.getAbsoluteDirection(this.direction, relative)
+          let newpos = math.add(this.position, absolute)
+          this.env.destroy(newpos)
+        },
+        description: 'The agent destroy a block in the passed direction',
+        arguments: [
+          {
+            name: 'direction',
+            description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+          }
+        ],
+        example: `
+agent.place(Directions.DOWN)
+agent.place(Directions.UP, {top: [255, 75, 80], side: [255, 250, 230]})
+`
+      },
+      SET_COLOR: {
+        fn: function (color) {
+          this.block_colors = color
+        },
+        description: 'Change the color for new blocks',
+        arguments: [
+          {
+            name: 'color',
+            description: 'The new colors for a block'
+          }
+        ],
+        example: `
+agent.set_color({[200, 230 , 250], [255, 230, 200]})
+`
+      },
+      CHECK: {
+        fn: function (direction, resolve) {
+          let absolute = this.getAbsoluteDirection(this.direction, direction)
+          let newpos = math.add(this.position, absolute)
+          resolve(this.env.isInConf(newpos))
+        },
+        description: 'Check what there is in the direction choosed.',
+        arguments: [
+          {
+            name: 'direction',
+            description: `One of ${Object.keys(Directions).map(d => `Directions.${d}`)}`
+          }
+        ],
+        example: `
+if (agent.check(FORWARD)){
+   agent.turn(RIGHT)
+}
+`
+      }
+}
 class Agent {
 	constructor(env) {
 	    this.commands = []
@@ -288,74 +401,45 @@ class Agent {
 		this.direction = [0, -1, 0]
 		this.block_colors = { 
 			top : TOP_DEFAULT,
-			side : SIDE_DEFAULT
+      side : SIDE_DEFAULT
 		}
 
 		if(!this.env.isInConf(this.position)){
 			let block = Block.AgentBlock(this.direction)
 			this.env.place(this.position, block)
 		}
-		
+    // return ProxyAgent(this, this.env)
 	}
 
-
+  check(direction) {
+    return new Promise(resolve => this.commands.push([AgentActions.CHECK, direction, resolve]))
+  }
 	move(direction, steps=1) {
 		for(let i = 0; i < steps; i++)
-	   		this.commands.push([MOVE, direction])
+	   		this.commands.push([AgentActions.MOVE, direction])
 	}
 	turn(direction) {
-	    this.commands.push([TURN, direction])
+	    this.commands.push([AgentActions.TURN, direction])
 	}
 	place(direction) {
-	    this.commands.push([PLACE, direction])
+	    this.commands.push([AgentActions.PLACE, direction])
 	}
 
 	destroy(direction) {
-	    this.commands.push([DESTROY, direction])
+	    this.commands.push([AgentActions.DESTROY, direction])
 	}
 
 	set_color(colors) {
-	    this.commands.push([SET_COLOR, colors])
-	}
-
-	run(command, relative){
-
-		if(command == MOVE){
-			let absolute = this.getAbsoluteDirection(this.direction, relative)
-			let newpos = math.add(this.position, absolute)
-			if(!this.env.isInConf(newpos)){
-				this.env.shift(this.position, newpos)
-				this.position = newpos
-			}
-		}
-		if(command == TURN){
-			this.env.destroy(this.position)
-			this.direction = this.getAbsoluteDirection(this.direction, relative)
-			this.env.place(this.position, Block.AgentBlock(this.direction))
-		}
-
-		if(command == PLACE){
-			let absolute = this.getAbsoluteDirection(this.direction, relative)
-			let newpos = math.add(this.position, absolute)
-			this.env.place(newpos, Block.TerrainBlock(newpos, this.block_colors.top, this.block_colors.side))
-		}
-
-		if(command == DESTROY){
-			let absolute = this.getAbsoluteDirection(this.direction, relative)
-			let newpos = math.add(this.position, absolute)
-			this.env.destroy(newpos)
-		}
-
-		if(command == SET_COLOR)
-			this.block_colors = relative
+	    this.commands.push([AgentActions.SET_COLOR, colors])
 	}
 
 	processNextCommand() {
 		let op = this.commands.shift()
 		if (op) {
-			this.run(op[0], op[1])
+      let [cmd, ...args] = op;
+      cmd.fn.apply(this, args)
+      return true
 		}
-		return op;
 	}
 
 
@@ -382,8 +466,9 @@ class Agent {
 }
 
 export {
-    Environment,
-	Agent,
-	Directions,
+  Environment,
+  Directions,
+  Agent,
+  AgentActions,
 	Block
 }

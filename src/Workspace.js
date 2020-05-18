@@ -88,8 +88,10 @@ for(let p = 0; p < 3; p++){
             let globalVars = Object.keys(Directions)
                 .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
             let ctx = {};
-            new Function(`"use strict"; ${globalVars} this.script = function(agent) { ${this.state.code}\n }`)
+            let code = this.state.code.replace(/agent\.((asyncCommand|check)\(.*?\))/g, 'await agent.$1')
+            new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
                 .apply(ctx)
+
             ctx.script.apply(null, [this.state.agent])
         }
     }

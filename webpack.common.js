@@ -4,7 +4,7 @@ const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
   mode: 'development',
-  entry: './src/index.js',
+  entry: ['babel-polyfill', './src/index.js'],
   output: {
     filename: 'main.js',
     path: path.resolve(__dirname, 'dist'),
@@ -21,6 +21,16 @@ module.exports = {
   ],
   module: {
     rules: [
+      {
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      },
       // the url-loader uses DataUrls.
       // the file-loader emits files.
       { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&mimetype=application/font-woff" },
