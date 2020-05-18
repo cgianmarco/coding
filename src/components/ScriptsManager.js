@@ -16,7 +16,8 @@ const Scripts = {
                     .filter(k => k.indexOf(SCRIPT_NAMESPACE) == 0)
                     .map(k => k.substr(SCRIPT_NAMESPACE.length + 1)),
     load: name => storage.getItem(scriptKey(name)),
-    store: (name, content) => storage.setItem(scriptKey(name), content)
+    store: (name, content) => storage.setItem(scriptKey(name), content),
+    delete: (name) => storage.removeItem(scriptKey(name))
 }
 function tooltip(button) {
     return tippy(button.ref.current, {
@@ -47,13 +48,14 @@ class ActionButton extends Component {
     }
     render(props) {
         return html`
-            <button ref=${this.ref} title=${props.title} class="btn-${props.type} ${props.extraClass || ''}" onClick=${props.onClick} >
+            <button ref=${this.ref} title=${props.title} class="btn-${props.type} ${props.extraClass || ''}" 
+                    onClick=${props.onClick}>
                 <${Icon} icon="${props.icon}" size=${props.iconSize} /> ${props.text}
             </button>
         `
     }
 }
-function ScriptsCarousel(props){
+function ScriptsList(props){
     var items = partition(
         2,
         Scripts.entries()
@@ -62,9 +64,14 @@ function ScriptsCarousel(props){
                 <div class="d-flex flex-row p-0 text-left w-50 script">
                     <div class="btn-group w-100 p-1">
                         <${ActionButton} type="danger" title="Delete" icon="trash" extraClass="rounded-left"
-                                         onClick=${() => alert('Not implemented!')} />
+                                         onClick=${() => {
+                                             if (confirm(`Are you sure you want to delete ${k}?`)) {
+                                                 Scripts.delete(k)
+                                                 props.onDeletedFile(k)
+                                             }
+                                         }} />
                         <${ActionButton} type="primary" text=${k} title="Open" icon="file-code" extraClass="rounded-right w-100"
-                                         onClick=${() => props.onLoadScript({name: k, code: Scripts.load(k)})} />
+                                         onClick=${() => props.onLoadFile({name: k, code: Scripts.load(k)})} />
                     </div>
                 </div>
             `)
@@ -80,21 +87,36 @@ class ScriptsManager extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            files: false,
-            current: null
+            files: false
         }
         this.buttons = [
             {
                 class: 'btn-light',
-                click: e => this.updateState({files: !this.state.files}),
+                click: e => {
+                    this.setState({files: false})
+                    let code = this.props.script.code;
+                    if (this.props.script.modified && confirm('There are unsaved changes. Do you want to trash them?')) {
+                        code = ''
+                    }
+                    this.props.onLoadFile({name: '', code: ''})
+                },
+                icon: 'file',
+                title: 'New Script'
+            },
+            {
+                class: 'btn-light',
+                click: e => {
+                    this.updateState({files: !this.state.files})
+                },
                 icon: 'folder-open',
                 title: 'Load Script'
             },
             {
                 class: 'btn-light',
                 click: e => {
-                    let name = prompt("File name");
-                    Scripts.store(name, this.props.code)
+                    let name = this.props.script.name || prompt("File name");
+                    Scripts.store(name, this.props.script.code)
+                    this.props.onSaveFile(this.props.script)
                 },
                 icon: 'save',
                 title: 'Save'
@@ -111,13 +133,20 @@ class ScriptsManager extends Component {
         this.buttons.forEach(tooltip)
     }
     render(props) {
-        this.buttons[0].class = `btn-light ${this.state.files ? 'active' : ''}`
+        this.buttons[1].class = `btn-light ${this.state.files ? 'active' : ''}`
         let buttons = this.buttons.map((b, i) => html`
             <button ref=${b.ref} class="btn col btn ${b.class} ${i > 0 ? 'border-left' : ''}" onClick=${b.click}>
                 <${Icon} icon=${b.icon} />
             </button>
         `)
-        var files = this.state.files ? html`<${ScriptsCarousel} onLoadScript=${props.onLoadScript}/>` : ''
+        var files = this.state.files 
+            ? html`<${ScriptsList} active=${props.script} 
+                                    onLoadFile=${f => {
+                                        this.setState({files: false})
+                                        props.onLoadFile(f)
+                                    }}
+                                    onDeletedFile=${props.onDeletedFile} />` 
+            : ''
         return html`
             <div class="col btn-group">
                 <div class="container-fluid">
@@ -130,15 +159,4 @@ class ScriptsManager extends Component {
         `
     }
 }
-Scripts.store('Prova', `
-agent.move(UP);
-agent.place(DOWN);
-`)
-
-Scripts.store('Prova2', `
-agent.move(UP);
-agent.place(DOWN);
-agent.move(FORWARD);
-agent.place(DOWN);
-`)
 export default ScriptsManager;

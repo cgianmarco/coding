@@ -15,8 +15,9 @@ class Workspace extends Component {
         super(props)
         this.canvas = createRef();
         this.state = {
-            running: false,
-            code: ` //Initial script
+            script: {
+                name: null,
+                code: ` //Initial script
 for(let p = 0; p < 3; p++){
 
     for(let j = 0; j < 4; j++){
@@ -49,6 +50,8 @@ for(let p = 0; p < 3; p++){
     }
 }
 ` 
+            },
+            running: false
         };
     }
     componentDidMount() {
@@ -111,14 +114,30 @@ for(let p = 0; p < 3; p++){
         }
     }
     codeUpdated(code) {
-        this.updateState({code: code})
+        this.updateState({script: {
+            name: this.state.script.name,
+            code: code,
+            modified: true
+        }})
+    }
+    onLoadFile(script) {
+        this.updateState({script: script})
+    }
+    onDeletedFile(f) {
+        this.updateState({script: {
+            name: this.state.script.name,
+            code: this.state.script.code,
+            modified: f == this.state.script.name
+        }})
     }
     render() {
         let sections = [
             {
                 icon: "code",
-                title: 'Code Editor',
-                body: html`<${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>`,
+                title: `Code Editor ${this.state.script.name ? `[${this.state.script.name}${this.state.script.modified ? '*' : ''}]` : ''}`,
+                body: html`<${CodeEditor} script=${this.state.script} onLoadFile=${this.onLoadFile.bind(this)} 
+                                          onCodeChange=${this.codeUpdated.bind(this)} onDeletedFile=${this.onDeletedFile.bind(this)}
+                                          onSaveFile=${() => this.updateState({script: {name: this.state.script.name, code: this.state.script.code}})} />`,
                 options: {
                     body: {
                         class: 'pl-0 pt-0 pr-0 editor'
@@ -137,7 +156,6 @@ for(let p = 0; p < 3; p++){
                 `
             }
         ]
-        console.log('render workspace')
         return html`
             <div class="row">
                 <div class="col-4 side-editor p-0">
