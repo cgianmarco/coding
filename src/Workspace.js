@@ -27,13 +27,13 @@ for(let p = 0; p < 3; p++){
             agent.place(DOWN)
             agent.move(FORWARD)
 
-
+            
         }
         agent.turn(LEFT)
 
     }
 }
-
+        
 for(let p = 0; p < 3; p++){
 
     for(let j = 0; j < 4; j++){
@@ -43,13 +43,13 @@ for(let p = 0; p < 3; p++){
             agent.place(DOWN)
             agent.move(BACK)
 
-
+            
         }
         agent.turn(RIGHT)
 
     }
 }
-`
+` 
             },
             running: false
         };
@@ -90,8 +90,8 @@ for(let p = 0; p < 3; p++){
             let ctx = {};
             let code = this.state.script.code.replace(/agent\.((asyncCommand|check)\(.*?\))/g, 'await agent.$1')
             new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
-                .apply(ctx)
-
+                .apply(ctx) 
+                
             ctx.script.apply(null, [this.state.agent])
         }
     }
@@ -104,13 +104,11 @@ for(let p = 0; p < 3; p++){
         setTimeout(loop.bind(this), 0)
     }
     frame(callback = () => {}) {
-
         if (this.state.agent.processNextCommand()) {
             window.requestAnimationFrame(() => {
                 this.state.env.drawChanges();
                 setImmediate(callback)
             })
-
         } else {
             this.updateState({running: false})
         }
@@ -137,7 +135,7 @@ for(let p = 0; p < 3; p++){
             {
                 icon: "code",
                 title: `Code Editor ${this.state.script.name ? `[${this.state.script.name}${this.state.script.modified ? '*' : ''}]` : ''}`,
-                body: html`<${CodeEditor} script=${this.state.script} onLoadFile=${this.onLoadFile.bind(this)}
+                body: html`<${CodeEditor} script=${this.state.script} onLoadFile=${this.onLoadFile.bind(this)} 
                                           onCodeChange=${this.codeUpdated.bind(this)} onDeletedFile=${this.onDeletedFile.bind(this)}
                                           onSaveFile=${() => this.updateState({script: {name: this.state.script.name, code: this.state.script.code}})} />`,
                 options: {
@@ -151,7 +149,7 @@ for(let p = 0; p < 3; p++){
                 title: "Execution",
                 body: html`
                     <div class="container-fluid">
-                        <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)}
+                        <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
                                           onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)}
                                           onReset=${this.reset.bind(this)} />
                     </div>
