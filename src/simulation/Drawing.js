@@ -23,44 +23,50 @@ function getPolygons(z, posx, posy) {
 }
 
 
+const POLYGONS = getPolygons(0, tileWidth/2, 0)
+const REGIONS = POLYGONS.map( (points,i)=>{
+    const REGION = new Path2D();
+    //REGION.beginPath()
+    REGION.moveTo(points[0][0], points[0][1])
+
+    for (let i = 1; i < points.length; i++){
+      REGION.lineTo(points[i][0], points[i][1])
+    }
+    REGION.closePath()
+    return REGION
+})
+
+
 
 function initializeCanvas(canvas, colors){
 	let ctx = canvas.getContext('2d')
-	ctx.width = tileWidth
-	ctx.height = 2 * tileHeight
 
-	let polygons = getPolygons(0, tileWidth/2, 0)
-
-	polygons.forEach((points, i) =>{
-		ctx.beginPath()
-	    ctx.moveTo(points[0][0], points[0][1])
-
-	    for (let i = 1; i < points.length; i++){
-	      ctx.lineTo(points[i][0], points[i][1])
-	    }
-	    ctx.closePath()
-
-	    ctx.fillStyle = colors[i];
-	    ctx.fill();
-
-	    ctx.strokeStyle = Drawing.rgb(40,40,40)
-	    ctx.lineWidth = 0.2
-	    ctx.stroke();
-	})
-	
+  REGIONS.forEach((region,i)=>{
+    ctx.strokeStyle = Drawing.rgb(40,40,40)
+    ctx.lineWidth = 0.2
+    ctx.stroke(region)
+    ctx.fillStyle = colors[i];
+    ctx.fill(region);
+  })
 }
 
 
 function createCube(colors){
-  	let canvas = document.createElement('canvas')
-  	initializeCanvas(canvas, colors)
+    let canvas = null
+    if (typeof OffscreenCanvas !== "undefined") {
+        canvas =  new OffscreenCanvas(tileWidth,2 * tileHeight)
+    } else {
+        //Once Firefox will start supporting this, all major browser will work with the other branch
+        //You can check support status on https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
+        canvas = document.createElement('canvas')
+    }
+
+    initializeCanvas(canvas, colors)
 
   	return function(ctx, x, y){
-
-  		ctx.drawImage(canvas, x, y)
-
+      ctx.drawImage(canvas, x, y)
   	}
-  	
+
  }
 
 const COLOR_CACHE = {
@@ -154,7 +160,7 @@ class Drawing {
     if (entry) {
       return entry;
     }
-    let max_z = parseInt(Math.min(...color) / 10) - 2 
+    let max_z = parseInt(Math.min(...color) / 10) - 2
     let dark = [color[0] - max_z * 10, color[1] - max_z * 10, color[2] - max_z * 10]
     let TOP = dark
 
