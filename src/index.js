@@ -14,7 +14,7 @@ function Application() {
         <div class="container-fluid">
             <div class="row">
                 <div class="col">
-                    <h1>Coding <i class="fas fa-code"></i></h1>
+                    <h1 id="main-title"><i class="fas fa-cubes"></i> Coding <i class="fas fa-code"></i></h1>
                 </div>
             </div>
             <${Workspace} />

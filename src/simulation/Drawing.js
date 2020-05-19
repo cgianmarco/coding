@@ -42,8 +42,8 @@ function initializeCanvas(canvas, colors){
 	let ctx = canvas.getContext('2d')
 
   REGIONS.forEach((region,i)=>{
-    ctx.strokeStyle = Drawing.rgb(90,90,90)
-    ctx.lineWidth = 0.5
+    ctx.strokeStyle = Drawing.rgb(40,40,40)
+    ctx.lineWidth = 0.2
     ctx.stroke(region)
     ctx.fillStyle = colors[i];
     ctx.fill(region);
@@ -52,11 +52,14 @@ function initializeCanvas(canvas, colors){
 
 
 function createCube(colors){
-    //IF YOUR CARE ABOUT FIREFOX, USE THIS
-    //let canvas = document.createElement('canvas')
-
-    //IF YOU DON'T CARE ABOUT SUPPORTING FIREFOX FROM TODAY, USE THIS
-    let canvas =  new OffscreenCanvas(tileWidth,2 * tileHeight)
+    let canvas = null
+    if (typeof OffscreenCanvas !== "undefined") {
+        canvas =  new OffscreenCanvas(tileWidth,2 * tileHeight)
+    } else {
+        //Once Firefox will start supporting this, all major browser will work with the other branch
+        //You can check support status on https://developer.mozilla.org/en-US/docs/Web/API/OffscreenCanvas
+        canvas = document.createElement('canvas')
+    }
 
     initializeCanvas(canvas, colors)
 

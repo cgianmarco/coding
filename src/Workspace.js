@@ -13,11 +13,11 @@ class Workspace extends Component {
 
     constructor(props) {
         super(props)
-        this.perf = []
         this.canvas = createRef();
         this.state = {
-            running: false,
-            code: ` //Initial script
+            script: {
+                name: null,
+                code: ` //Initial script
 for(let p = 0; p < 3; p++){
 
     for(let j = 0; j < 4; j++){
@@ -50,6 +50,8 @@ for(let p = 0; p < 3; p++){
     }
 }
 `
+            },
+            running: false
         };
     }
     componentDidMount() {
@@ -79,8 +81,6 @@ for(let p = 0; p < 3; p++){
         }
         this.executeCode()
         this.updateState({running: this.state.agent.commands.length})
-        this.perf.push(performance.now() )
-        console.log(this.perf)
         this.play();
     }
     executeCode() {
@@ -88,7 +88,7 @@ for(let p = 0; p < 3; p++){
             let globalVars = Object.keys(Directions)
                 .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
             let ctx = {};
-            let code = this.state.code.replace(/agent\.((asyncCommand|check)\(.*?\))/g, 'await agent.$1')
+            let code = this.state.script.code.replace(/agent\.((asyncCommand|check)\(.*?\))/g, 'await agent.$1')
             new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
                 .apply(ctx)
 
@@ -113,20 +113,33 @@ for(let p = 0; p < 3; p++){
 
         } else {
             this.updateState({running: false})
-            this.perf.push(performance.now() )
-            console.log(this.perf)
-            console.log(`Took ${this.perf.pop() - this.perf.pop()} milliseconds.`)
         }
     }
     codeUpdated(code) {
-        this.updateState({code: code})
+        this.updateState({script: {
+            name: this.state.script.name,
+            code: code,
+            modified: true
+        }})
+    }
+    onLoadFile(script) {
+        this.updateState({script: script})
+    }
+    onDeletedFile(f) {
+        this.updateState({script: {
+            name: this.state.script.name,
+            code: this.state.script.code,
+            modified: f == this.state.script.name
+        }})
     }
     render() {
         let sections = [
             {
                 icon: "code",
-                title: 'Code Editor',
-                body: html`<${CodeEditor} onUpdate=${this.codeUpdated.bind(this)} code=${this.state.code}/>`,
+                title: `Code Editor ${this.state.script.name ? `[${this.state.script.name}${this.state.script.modified ? '*' : ''}]` : ''}`,
+                body: html`<${CodeEditor} script=${this.state.script} onLoadFile=${this.onLoadFile.bind(this)}
+                                          onCodeChange=${this.codeUpdated.bind(this)} onDeletedFile=${this.onDeletedFile.bind(this)}
+                                          onSaveFile=${() => this.updateState({script: {name: this.state.script.name, code: this.state.script.code}})} />`,
                 options: {
                     body: {
                         class: 'pl-0 pt-0 pr-0 editor'
@@ -145,7 +158,6 @@ for(let p = 0; p < 3; p++){
                 `
             }
         ]
-        console.log('render workspace')
         return html`
             <div class="row">
                 <div class="col-4 side-editor p-0">

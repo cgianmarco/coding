@@ -1,3 +1,9 @@
+body {
+    background-color: rgb(91,144,183);
+}
+#main-title {
+    color: rgb(243,247,250);
+}
 .side-editor {
     height: auto;
 }

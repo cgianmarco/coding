@@ -6,8 +6,8 @@ const math = {
 }
 
 // const TOP_DEFAULT = [172, 214, 86]
-const SIDE_DEFAULT = [135, 57, 81]
-const TOP_DEFAULT = [60, 160, 120]
+const SIDE_DEFAULT = [85,20,0]
+const TOP_DEFAULT = [134,158,121]
 
 const tileWidth = 20;
 const tileHeight = tileWidth / 2;
