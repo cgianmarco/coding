@@ -4,7 +4,11 @@ import CodeEditor from './components/CodeEditor.js'
 import Icon from './components/Icon.js'
 import EditorActions from './components/EditorActions.js'
 import Accordion from './components/Accordion.js'
-import {Environment, Agent, Directions} from './simulation/Environment.js'
+import {Environment, Agent, Directions, AgentActions} from './simulation/Environment.js'
+import Drawing from './simulation/Drawing.js'
+import Logger from './logging/Logger.js'
+
+const LOG = new Logger('workspace');
 
 // Initialize htm with Preact
 const html = htm.bind(h);
@@ -55,9 +59,7 @@ for(let p = 0; p < 3; p++){
         };
     }
     componentDidMount() {
-        let env = new Environment(this.canvas.current);
-        this.updateState({env: env, agent: new Agent(env)})
-        env.drawChanges()
+        this.reset()
     }
     updateState(update) {
         this.setState(state => Object.assign(state, update))
@@ -70,10 +72,22 @@ for(let p = 0; p < 3; p++){
         this.frame();
     }
     reset() {
-        let env = new Environment(this.canvas.current)
+        let drawing = new Drawing(this.canvas.current)
+        let env = new Environment()
+        env.addListener(function(changes, resolve) {
+            LOG.debug('request animation frame');
+            
+            window.requestAnimationFrame(() => {
+                LOG.debug('drawing');
+                
+                drawing.clean()
+                changes.blocks
+                    .forEach(block => drawing.drawBlock(block))
+                resolve()
+            })
+        })
         let agent = new Agent(env)
         this.updateState({env, agent})
-        env.drawChanges()
     }
     runCode() {
         if (this.state.running) {
@@ -81,14 +95,18 @@ for(let p = 0; p < 3; p++){
         }
         this.executeCode()
         this.updateState({running: this.state.agent.commands.length})
-        this.play();
+        //this.play();
     }
     executeCode() {
         if (this.state.agent.commands.length == 0) {
             let globalVars = Object.keys(Directions)
                 .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
             let ctx = {};
-            let code = this.state.script.code.replace(/agent\.((asyncCommand|check)\(.*?\))/g, 'await agent.$1')
+
+            let methods = Object.keys(AgentActions)
+                .reduce((agg, k) => `${k}|${agg}`)
+            let regex = new RegExp(`agent\\.((${methods})\\(.*?\\))`, 'g')
+            let code = this.state.script.code.replace(regex, 'await agent.$1')
             new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
                 .apply(ctx) 
                 
@@ -104,14 +122,14 @@ for(let p = 0; p < 3; p++){
         setTimeout(loop.bind(this), 0)
     }
     frame(callback = () => {}) {
-        if (this.state.agent.processNextCommand()) {
-            window.requestAnimationFrame(() => {
-                this.state.env.drawChanges();
-                setImmediate(callback)
-            })
-        } else {
-            this.updateState({running: false})
-        }
+        // if (this.state.agent.processNextCommand()) {
+        //     window.requestAnimationFrame(() => {
+        //         this.state.env.drawChanges();
+        //         setImmediate(callback)
+        //     })
+        // } else {
+        //     this.updateState({running: false})
+        // }
     }
     codeUpdated(code) {
         this.updateState({script: {

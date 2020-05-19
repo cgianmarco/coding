@@ -82,6 +82,21 @@ class Drawing {
     this.width = canvas.width = canvas.offsetWidth,
       this.height = canvas.height = canvas.offsetHeight
   }
+
+  drawBlock(block) {
+
+    let [x, y, z] = block.coords
+
+    x = x - z
+    y = y - z
+
+    let top_color = Drawing.rgb(...block.top)
+    let left_color = Drawing.rgb(...block.left)
+    let right_color = Drawing.rgb(...block.right)
+
+    this.drawCube(x, y, top_color, left_color, right_color)
+  }
+
   clean() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
