@@ -192,6 +192,11 @@ class Environment {
     }
     listener(changes, () => {}) //trigger the listener with current state
   }
+  shutdown() {
+    //Release everything, I hope 🤞🏻
+    this.listeners = null
+    this.commandsQueue = null
+  }
 }
 function loop(env) {
   var next = env.commandsQueue.shift()

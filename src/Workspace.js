@@ -62,65 +62,86 @@ for(let p = 0; p < 3; p++){
         this.reset()
     }
     updateState(update) {
+        LOG.debug('updateState', update)
         this.setState(state => Object.assign(state, update))
     }
     pause() {
-        this.updateState({running: false})
+        //Maybe it is not event possible, but if frame() is called before having
+        //captured the promise given by the environment, let's just remove the pause
+        this.updateState({pause: true, frame: () => this.updateState({pause: false})})
     }
     stepFW() {
-        this.executeCode()
-        this.frame();
+        if (this.state.pause || !this.state.exec) {
+            this.state.frame()
+        }
+    }
+    play() {
+        LOG.debug("play", this.state.pause, this.state.exec)
+        if (this.state.pause) {
+            this.setState(state => {
+                //This need to be async as the promise chains can get back
+                // to some Workspace method before having updated the state
+                //Should we break the rules and directly update the state
+                // without calling the 'setState' 🤔
+                setImmediate(state.frame)
+                return Object.assign(state, {pause: false, frame: null})
+            })
+        }
+        else if (!this.state.exec) {
+            this.setState(state => {
+                this.executeCode(state.script.code, state.agent)
+                    .then(() => this.updateState({exec: false}))
+                return Object.assign(state, {exec: true})
+            })
+        }
     }
     reset() {
+        if (this.state.env) {
+            this.state.env.shutdown();
+            this.updateState({pause: false, exec: false})
+        }
         let drawing = new Drawing(this.canvas.current)
         let env = new Environment()
+        var self = this;
         env.addListener(function(changes, resolve) {
             LOG.debug('request animation frame');
-            
+
             window.requestAnimationFrame(() => {
                 LOG.debug('drawing');
                 
                 drawing.clean()
                 changes.blocks
                     .forEach(block => drawing.drawBlock(block))
-                resolve()
+
+                if (self.state.pause) {
+                    self.updateState({frame: resolve})
+                } 
+                else {
+                    resolve()
+                }
             })
+            
         })
         let agent = new Agent(env)
         this.updateState({env, agent})
     }
-    runCode() {
-        if (this.state.running) {
-            return;
-        }
-        this.executeCode()
-        this.updateState({running: this.state.agent.commands.length})
-        //this.play();
+    executeCode(code, agent) {
+        let globalVars = Object.keys(Directions)
+            .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
+            
+        let methods = Object.keys(AgentActions)
+                            .reduce((agg, k) => `${k}|${agg}`)
+        let regex = new RegExp(`agent\\.((${methods})\\(.*?\\))`, 'g')
+        
+        code = code.replace(regex, 'await agent.$1')
+            
+        let ctx = {};
+        new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
+            .apply(ctx)
+            
+        return ctx.script.apply(null, [agent])
     }
-    executeCode() {
-        if (this.state.agent.commands.length == 0) {
-            let globalVars = Object.keys(Directions)
-                .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
-            let ctx = {};
-
-            let methods = Object.keys(AgentActions)
-                .reduce((agg, k) => `${k}|${agg}`)
-            let regex = new RegExp(`agent\\.((${methods})\\(.*?\\))`, 'g')
-            let code = this.state.script.code.replace(regex, 'await agent.$1')
-            new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
-                .apply(ctx) 
-                
-            ctx.script.apply(null, [this.state.agent])
-        }
-    }
-    play() {
-        function loop() {
-            if (this.state.running) {
-                this.frame(loop.bind(this))
-            }
-        }
-        setTimeout(loop.bind(this), 0)
-    }
+    
     frame(callback = () => {}) {
         // if (this.state.agent.processNextCommand()) {
         //     window.requestAnimationFrame(() => {
@@ -149,6 +170,7 @@ for(let p = 0; p < 3; p++){
         }})
     }
     render() {
+        LOG.debug('render component:', this.state.pause, this.state.exec)
         let sections = [
             {
                 icon: "code",
@@ -168,7 +190,7 @@ for(let p = 0; p < 3; p++){
                 body: html`
                     <div class="container-fluid">
                         <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
-                                          onStepFW=${this.stepFW.bind(this)} onRun=${this.runCode.bind(this)}
+                                          onStepFW=${this.stepFW.bind(this)} onRun=${this.play.bind(this)}
                                           onReset=${this.reset.bind(this)} />
                     </div>
                 `

@@ -20,25 +20,25 @@ function EditorActions(props) {
 
     let buttons = [
         {
-            class: 'btn-danger ' + (props.process.running ? 'disabled' : ''),
+            class: 'btn-danger ',
             click: props.onReset,
             icon: 'broom',
             text: 'Clean'
         },
         {
-            class: 'btn-warning ' + (props.process.running ? '' : 'disabled'),
+            class: 'btn-warning ' + (!props.process.pause && props.process.exec ? '' : 'disabled'),
             click: props.onPause,
             icon: 'pause',
             text: 'Pause'
         },
         {
-            class: 'btn-info ' + (props.process.running ? 'disabled' : ''),
+            class: 'btn-info ' + (props.process.pause || !props.process.exec ? '' : 'disabled'),
             click: props.onStepFW,
             icon: 'step-forward',
             text: 'Step'
         },
         {
-            class: 'btn-info ' + (props.process.running ? 'disabled' : ''),
+            class: 'btn-info ' + (props.process.pause || !props.process.exec ? '' : 'disabled'),
             click: props.onRun,
             icon: 'play',
             text: 'Run'
