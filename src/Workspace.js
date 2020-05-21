@@ -7,6 +7,7 @@ import Accordion from './components/Accordion.js'
 import {Environment, Agent, Directions, AgentActions} from './simulation/Environment.js'
 import Drawing from './simulation/Drawing.js'
 import Logger from './logging/Logger.js'
+import CodeTransformer from './code/CodeTransformer.js'
 
 const LOG = new Logger('workspace');
 
@@ -126,20 +127,11 @@ for(let p = 0; p < 3; p++){
         this.updateState({env, agent})
     }
     executeCode(code, agent) {
-        let globalVars = Object.keys(Directions)
-            .reduce((agg, k) => `${agg}const ${k} = ${Directions[k]};`, '')
+
+        var globalVars = Object.assign({agent}, Directions);
+        var compiled = CodeTransformer.compile(code, globalVars);
             
-        let methods = Object.keys(AgentActions)
-                            .reduce((agg, k) => `${k}|${agg}`)
-        let regex = new RegExp(`agent\\.((${methods})\\(.*?\\))`, 'g')
-        
-        code = code.replace(regex, 'await agent.$1')
-            
-        let ctx = {};
-        new Function(`"use strict"; ${globalVars} this.script = async function(agent) { ${code}\n }`)
-            .apply(ctx)
-            
-        return ctx.script.apply(null, [agent])
+        return compiled()
     }
     
     frame(callback = () => {}) {
