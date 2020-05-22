@@ -44,4 +44,4 @@ Logger.setOptions = function(level, whitelist = [], blacklist = []) {
     }
 }
 
-export default Logger;
+module.exports = Logger;
