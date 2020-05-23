@@ -8,6 +8,7 @@ import {Environment, Agent, Directions, AgentActions} from './simulation/Environ
 import Drawing from './simulation/Drawing.js'
 import Logger from './logging/Logger.js'
 import CodeTransformer from './code/CodeTransformer.js'
+import World from './simulation/World.js';
 
 const LOG = new Logger('workspace');
 
@@ -72,8 +73,13 @@ for(let p = 0; p < 3; p++){
         this.updateState({pause: true, frame: () => this.updateState({pause: false})})
     }
     stepFW() {
-        if (this.state.pause || !this.state.exec) {
-            this.state.frame()
+        if (this.state.pause) {
+            if (this.state.frame) {
+                this.state.frame()
+            } else {
+                this.executeCode(state.script.code, state.agent)
+                    .then(() => this.updateState({exec: false}))
+            }
         }
     }
     play() {
@@ -128,21 +134,10 @@ for(let p = 0; p < 3; p++){
     }
     executeCode(code, agent) {
 
-        var globalVars = Object.assign({agent}, Directions);
+        var globalVars = Object.assign({agent: agent, world: new World(this.state.env)}, Directions);
         var compiled = CodeTransformer.compile(code, globalVars);
             
         return compiled()
-    }
-    
-    frame(callback = () => {}) {
-        // if (this.state.agent.processNextCommand()) {
-        //     window.requestAnimationFrame(() => {
-        //         this.state.env.drawChanges();
-        //         setImmediate(callback)
-        //     })
-        // } else {
-        //     this.updateState({running: false})
-        // }
     }
     codeUpdated(code) {
         this.updateState({script: {

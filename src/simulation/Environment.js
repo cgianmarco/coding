@@ -91,7 +91,7 @@ class Environment {
         let newpos = [i, j, 0]
         let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
 
-        this.place(newpos, block)
+        //this.place(newpos, block)
       }
   }
 
@@ -252,7 +252,7 @@ function loop(env) {
 }
 
 class Block{
-	static TerrainBlock(coords, top, side){
+	static TerrainBlock(coords, top = TOP_DEFAULT, side = SIDE_DEFAULT){
 		let z = coords[2]
 		let scaledTop = Drawing.scaleColorHeight(top, z)
 		let lightSide = Drawing.scaleColorSide(side)
