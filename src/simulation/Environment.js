@@ -91,7 +91,7 @@ class Environment {
         let newpos = [i, j, 0]
         let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
 
-        //this.place(newpos, block)
+        this.place(newpos, block)
       }
   }
 
