@@ -255,7 +255,7 @@ function loop(env) {
 }
 
 class Block{
-	static TerrainBlock(coords, top, side){
+	static TerrainBlock(coords, top = TOP_DEFAULT, side = SIDE_DEFAULT){
 		let z = coords[2]
 		let scaledTop = Drawing.scaleColorHeight(top, z)
 		let lightSide = Drawing.scaleColorSide(side)
