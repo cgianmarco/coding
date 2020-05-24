@@ -209,11 +209,10 @@ function loop(env) {
     let [commands, resolve, reject] = next
     ENV_LOG.debug('next', [commands, resolve, reject])
     try {
-      let result = null
-      commands.forEach(([cmd, ...args]) => {
+      const result = commands.map(([cmd, ...args]) => {
         ENV_LOG.debug('env ->', cmd, args);
 
-        result = env[cmd].apply(env, args)
+        return env[cmd].apply(env, args)
       })
       const changes = {
         blocks: Object.values(env.conf)
@@ -286,7 +285,7 @@ const AgentActions = {
           let newpos = math.add(this.position, absolute)
           return this.env.transact(['shift', this.position, newpos])
             .then(function(actualPosition){
-              this.position = actualPosition
+              this.position = actualPosition[0]
             }.bind(this))
         },
         description: 'Move the agent in a direction. It can move for multiple steps.',
