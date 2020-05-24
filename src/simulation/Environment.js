@@ -154,11 +154,14 @@ class Environment {
 
 
   shift(oldpos, newpos) {
-    let block = this.isInConf(oldpos)
-
-    if (block) {
+    let oldBlock = this.isInConf(oldpos)
+    let newBlock = this.isInConf(newpos)
+    if (oldBlock && !newBlock ) {
       this.destroy(oldpos)
-      this.place(newpos, block)
+      this.place(newpos, oldBlock)
+      return newpos
+    }else{
+      return oldpos
     }
 
   }
@@ -171,7 +174,7 @@ class Environment {
           throw new Error('Invalid commands: ' + invalid)
         }
         this.commandsQueue.push([commands, resolve, reject])
-     
+
         ENV_LOG.debug('running', this.running);
         if (!this.running) {
           loop(this)
@@ -181,7 +184,7 @@ class Environment {
   }
   /**
    * A listener is a function (changes, resolve)=>void
-   * @param {Function} listener 
+   * @param {Function} listener
    */
   addListener(listener) {
     this.listeners.push(listener)
@@ -206,12 +209,12 @@ function loop(env) {
     let [commands, resolve, reject] = next
     ENV_LOG.debug('next', [commands, resolve, reject])
     try {
-      commands.forEach(([cmd, ...args]) => {
+      const result = commands.map(([cmd, ...args]) => {
         ENV_LOG.debug('env ->', cmd, args);
-        
-        env[cmd].apply(env, args)
+
+        return env[cmd].apply(env, args)
       })
-      const changes = { 
+      const changes = {
         blocks: Object.values(env.conf)
           .map(getMaxZ)
           .sort(sortBlocks),
@@ -231,16 +234,16 @@ function loop(env) {
       )
       .then(() => {
         ENV_LOG.debug('resolve for code');
-        
-        resolve() //this is needed in order to resolve the promise returned to the user script
+
+        resolve(result) //this is needed in order to resolve the promise returned to the user script
                 //rendering and script execution should be considered totally unrelated processes
                 //the renderer is a listener (but maybe also this 🤔, now it is easier in this way)
       })
       .then(() => loop(env))
       //after all the listeners completed their work loop again!
-      
-      
-    } 
+
+
+    }
     catch(e) {
       console.error('Error executing a batch the batch of commands', next, e)
       reject(e)
@@ -281,7 +284,9 @@ const AgentActions = {
           let absolute = this.getAbsoluteDirection(this.direction, relative)
           let newpos = math.add(this.position, absolute)
           return this.env.transact(['shift', this.position, newpos])
-            .then(() => this.position = newpos)
+            .then(function(actualPosition){
+              this.position = actualPosition[0]
+            }.bind(this))
         },
         description: 'Move the agent in a direction. It can move for multiple steps.',
         arguments: [
@@ -403,7 +408,7 @@ class Agent {
 		this.env = env
 		this.position = [0,0,1]
 		this.direction = [0, -1, 0]
-		this.block_colors = { 
+		this.block_colors = {
 			top : TOP_DEFAULT,
       side : SIDE_DEFAULT
 		}
