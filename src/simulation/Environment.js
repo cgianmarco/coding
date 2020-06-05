@@ -78,21 +78,37 @@ function getMaxZ(blocks) {
   return blocks[0]
 
 }
+const TerrainGenerators = {
+  'none': {
+      label: 'None',
+      icon: 'circle-notch',
+      strategy: () => []
+  },
+  'simple': {
+      label: 'Plane',
+      icon: 'border-all',
+      strategy: function() {
+          var blocks = []
+          for (let i = -20; i < 20; i++) {
+              for (let j = -20; j < 20; j++) {
+                  let newpos = [i, j, 0]
+                  let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
+                  
+                  blocks.push([newpos, block])
+              }
+          }
+          return blocks;
+      }
+  }
+}
 
 class Environment {
-  constructor(canvas) {
+  constructor(generator) {
     this.listeners = [];
     this.commandsQueue = []
     this.conf = {}
-
-    for (let i = -20; i < 20; i++)
-      for (let j = -20; j < 20; j++) {
-
-        let newpos = [i, j, 0]
-        let block = Block.TerrainBlock(newpos, TOP_DEFAULT, SIDE_DEFAULT)
-
-        this.place(newpos, block)
-      }
+    ENV_LOG.info('generator', generator)
+    generator.strategy().forEach(([pos, block])=> this.place(pos, block))
   }
 
 
@@ -452,5 +468,6 @@ export {
   Directions,
   Agent,
   AgentActions,
-	Block
+  Block,
+  TerrainGenerators
 }

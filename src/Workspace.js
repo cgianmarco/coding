@@ -4,11 +4,12 @@ import CodeEditor from './components/CodeEditor.js'
 import Icon from './components/Icon.js'
 import EditorActions from './components/EditorActions.js'
 import Accordion from './components/Accordion.js'
-import {Environment, Agent, Directions, AgentActions} from './simulation/Environment.js'
+import {Environment, Agent, Directions, AgentActions, TerrainGenerators} from './simulation/Environment.js'
 import Drawing from './simulation/Drawing.js'
 import Logger from './logging/Logger.js'
 import CodeTransformer from './code/CodeTransformer.js'
 import World from './simulation/World.js';
+import TerrainOptions from './components/TerrainOptions.js';
 
 const LOG = new Logger('workspace');
 
@@ -57,7 +58,8 @@ for(let p = 0; p < 3; p++){
 }
 ` 
             },
-            running: false
+            running: false,
+            terrain: 'simple'
         };
     }
     componentDidMount() {
@@ -108,7 +110,7 @@ for(let p = 0; p < 3; p++){
             this.updateState({pause: false, exec: false})
         }
         let drawing = new Drawing(this.canvas.current)
-        let env = new Environment()
+        let env = new Environment(TerrainGenerators[this.state.terrain])
         var self = this;
         env.addListener(function(changes, resolve) {
             LOG.debug('request animation frame');
@@ -156,6 +158,9 @@ for(let p = 0; p < 3; p++){
             modified: f == this.state.script.name
         }})
     }
+    selectTerrain(generator) {
+        this.updateState({terrain: generator})
+    }
     render() {
         LOG.debug('render component:', this.state.pause, this.state.exec)
         let sections = [
@@ -179,6 +184,15 @@ for(let p = 0; p < 3; p++){
                         <${EditorActions} process=${this.state} onPause=${this.pause.bind(this)} 
                                           onStepFW=${this.stepFW.bind(this)} onRun=${this.play.bind(this)}
                                           onReset=${this.reset.bind(this)} />
+                    </div>
+                `
+            },
+            {
+                icon: "image",
+                title: "Terrain",
+                body: html`
+                    <div class="container-fluid">
+                        <${TerrainOptions} options=${TerrainGenerators} selected=${this.state.terrain} onClick=${this.selectTerrain.bind(this)} />
                     </div>
                 `
             }
