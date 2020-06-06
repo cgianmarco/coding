@@ -99,6 +99,56 @@ const TerrainGenerators = {
           }
           return blocks;
       }
+  },
+  'maze': {
+    label: 'Maze',
+    icon: 'dice-d20',
+    strategy: function() {
+      let width = 36;
+      let height = width;
+      let hw = Math.floor(width / 2);
+      let hh = Math.floor(height / 2); //half width and height, used to translate (x, y) to real position
+      let maze = []
+      let block = (x, y, z) => [[x - hw, y - hh, z || 1], Block.TerrainBlock([x - hw, y - hh, z || 1], SIDE_DEFAULT, SIDE_DEFAULT)];
+      let random = (start, end) => Math.floor(Math.random() * (end - start)) + start
+      let middle = (a, b) => Math.floor(a + ((b - a) / 2))
+      const min = width / 8;
+      function recursiveMaze(x1, x2, y1, y2) {
+        if ((x2 - x1) < min || (y2 - y1) < min) {
+          return
+        }
+        let mx = middle(x1, x2)
+        let my = middle(y1, y2)
+        let openX1 = random(x1, mx - 1, mx);
+        let openX2 = random(mx + 1, x2, mx);
+        let openY1 = random(y1, my - 1, my);
+        let openY2 = random(my + 1, y2, my);
+        for (var x = x1 ; x < x2 ; x++) {
+          if (x != openX1 && x != openX2 && x != hw) {
+            maze.push(block(x, my))
+          }
+        }
+        for (var y = y1 ; y < y2 ; y++) {
+          if (y != openY1 && y != openY2 && y != hh) {
+            maze.push(block(mx, y))
+          }
+        }
+        recursiveMaze(x1, mx, y1, my)
+        recursiveMaze(x1, mx, my, y2)
+        recursiveMaze(mx, x2, y1, my)
+        recursiveMaze(mx, x2, my, y2)
+      }
+      recursiveMaze(0, width, 0, height)
+      for (var x = 0 ; x <= width ; x++) {
+        for (var y = 0 ; y <= height ; y++) {
+          maze.push(block(x, 0))
+          maze.push(block(x, height))
+          maze.push(block(0, y))
+          maze.push(block(width, y))
+        }
+      }
+      return maze.concat(TerrainGenerators.simple.strategy())
+    }
   }
 }
 
