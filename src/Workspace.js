@@ -203,7 +203,7 @@ for(let p = 0; p < 3; p++){
                     <${Accordion} sections=${sections} />
                 </div>
                 <div class="col">
-                    <canvas ref=${this.canvas} id='canvas' style="width: 100%; height: 35em"></canvas>
+                    <canvas ref=${this.canvas} id='canvas' style="width: 100%"></canvas>
                 </div>
             </div>
         `;

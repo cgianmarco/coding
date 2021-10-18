@@ -1,5 +1,5 @@
 
-const tileWidth = 20;
+const tileWidth = 18;
 const tileHeight = tileWidth / 2;
 
 function getPolygons(z, posx, posy) {
@@ -79,8 +79,14 @@ class Drawing {
   	this.cubeCache = {}
     this.canvas = canvas;
     this.context = canvas.getContext('2d');
-    this.width = canvas.width = canvas.offsetWidth,
-      this.height = canvas.height = canvas.offsetHeight
+    if (!this.canvas['drawing-setup']) {
+      var rect = this.canvas.getBoundingClientRect()
+      
+      this.canvas.style = `position: absolute; left: -${rect.x}px; top: -${rect.y}px; z-index: -1`
+      this.canvas.width  = window.innerWidth;
+      this.canvas.height = window.innerHeight;
+      this.canvas['drawing-setup'] = [rect.x + (rect.width / 2), rect.y + (this.canvas.height / 2)]
+    }
   }
 
   drawBlock(block) {
@@ -98,7 +104,9 @@ class Drawing {
   }
 
   clean() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.context.resetTransform()
+    this.context.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    this.context.translate.apply(this.context, this.canvas['drawing-setup'])
   }
 
 
@@ -117,8 +125,8 @@ class Drawing {
 
   drawCube(x, y, top_color, left_color, right_color){
 
-  	let posx = this.width / 2 + (x - y) * tileWidth / 2 - tileWidth/2;
-    let posy = this.height / 2 + 50 + (x + y) * tileHeight / 2;
+  	let posx = (x - y) * tileWidth / 2 - tileWidth/2;
+    let posy = (x + y) * tileHeight / 2;
 
   	let cube = this.getCube(top_color, left_color, right_color)
   	cube(this.context, posx, posy)
