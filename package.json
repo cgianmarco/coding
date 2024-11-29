@@ -39,7 +39,7 @@
     "@fortawesome/fontawesome-free": "^5.13.0",
     "babel-polyfill": "^6.26.0",
     "bootstrap": "^4.5.0",
-    "codemirror": "^5.53.2",
+    "codemirror": "^5.58.2",
     "htm": "^3.0.4",
     "jshint": "^2.11.1",
     "mathjs": "^7.0.0",
